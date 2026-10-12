@@ -1,0 +1,21 @@
+<svg width="512" height="512" viewBox="14 14 72 72" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradChip" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7c3aed"/>
+      <stop offset="1" stop-color="#ec4899"/>
+    </linearGradient>
+  </defs>
+  <rect x="28" y="28" width="44" height="44" rx="9" fill="url(#gradChip)"/>
+  <g fill="url(#gradChip)">
+    <rect x="42" y="18" width="4.2" height="8" rx="2"/><rect x="54" y="18" width="4.2" height="8" rx="2"/>
+    <rect x="42" y="74" width="4.2" height="8" rx="2"/><rect x="54" y="74" width="4.2" height="8" rx="2"/>
+    <rect x="18" y="42" width="8" height="4.2" rx="2"/><rect x="18" y="54" width="8" height="4.2" rx="2"/>
+    <rect x="74" y="42" width="8" height="4.2" rx="2"/><rect x="74" y="54" width="8" height="4.2" rx="2"/>
+  </g>
+  <g fill="none" stroke="#ffffff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="50" cy="50" r="6" fill="#ffffff" stroke="none"/>
+    <path d="M50 44 V36 M50 56 V64 M44 50 H36 M56 50 H64"/>
+    <circle cx="50" cy="36" r="2.3" fill="#ffffff" stroke="none"/><circle cx="50" cy="64" r="2.3" fill="#ffffff" stroke="none"/>
+    <circle cx="36" cy="50" r="2.3" fill="#ffffff" stroke="none"/><circle cx="64" cy="50" r="2.3" fill="#ffffff" stroke="none"/>
+  </g>
+</svg>
