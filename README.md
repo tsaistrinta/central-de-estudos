@@ -4,7 +4,7 @@
 
 # Central de Estudos
 
-**Repositório pessoal para centralizar, organizar e encontrar rapidamente todo o material de estudo do curso — por curso, semestre e matéria.**
+**Repositório pessoal para centralizar, organizar e encontrar rapidamente todo o material de estudo de cursos.**
 
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-7c3aed)
 ![Front-end](https://img.shields.io/badge/front--end-React%20%2B%20Vite%20%2B%20TS-61dafb)
@@ -18,7 +18,7 @@
 
 ## Sobre o projeto
 
-A **Central de Estudos** é um aplicativo web para o estudante guardar e reencontrar tudo o que acumula ao longo do curso de Análise e Desenvolvimento de Sistemas: arquivos, links, anotações e trechos de código, organizados numa hierarquia **Curso → Semestre → Matéria → Material**. Cada usuário tem login próprio e seus dados são privados.
+A **Central de Estudos** é um aplicativo web para o estudante guardar e reencontrar tudo o que acumula ao longo de seus cursos: arquivos, links, anotações e trechos de código, organizados numa hierarquia **Curso → Semestre → Matéria → Material**. Cada usuário tem login próprio e seus dados são privados.
 
 O projeto nasceu como protótipo numa plataforma no-code (Base44) e está sendo reconstruído com stack própria, de código aberto e sem custo de lançamento, visando evoluir para um produto com planos de armazenamento.
 
@@ -115,7 +115,7 @@ O app sobe em `http://localhost:5173`.
 
 ## Autor
 
-**Lucas** — Análise e Desenvolvimento de Sistemas (FATEC).
+**Lucas T. Strinta** — Análise e Desenvolvimento de Sistemas (FATEC).
 
 ## Licença
 
