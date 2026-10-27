@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { CircleCheck, Clock, Plus, TrendingUp, Upload } from 'lucide-react'
+import { useAuth } from '@/lib/auth'
 
 // Tela 05 · Início. Até o Marco 6 os números vêm zerados; a estrutura já segue a identidade Foco.
 const resumo = { pendentes: 0, revisados: 0, totalMateriais: 0 }
@@ -32,6 +33,8 @@ function Vazio({ children }: { children: ReactNode }) {
 }
 
 export default function Dashboard() {
+  const { perfil } = useAuth()
+  const primeiroNome = perfil?.nome?.trim().split(/\s+/)[0]
   const agora = new Date()
   const data = agora.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
   const pct = resumo.totalMateriais ? Math.round((resumo.revisados / resumo.totalMateriais) * 100) : 0
@@ -41,7 +44,10 @@ export default function Dashboard() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">{data}</p>
-          <h1 className="mt-1 text-[28px] font-semibold tracking-tight">{saudacao(agora.getHours())}</h1>
+          <h1 className="mt-1 text-[28px] font-semibold tracking-tight">
+            {saudacao(agora.getHours())}
+            {primeiroNome && `, ${primeiroNome}`}
+          </h1>
         </div>
         <div className="flex gap-2">
           <Link

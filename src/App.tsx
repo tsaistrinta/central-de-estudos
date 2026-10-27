@@ -1,10 +1,13 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
-import AuthLayout from './components/AuthLayout'
+import { AuthCartao, AuthDividido } from './components/AuthLayout'
+import { RotaProtegida, RotaPublica } from './components/RotaProtegida'
 import Entrar from './pages/auth/Entrar'
 import CriarConta from './pages/auth/CriarConta'
 import RecuperarSenha from './pages/auth/RecuperarSenha'
+import RedefinirSenha from './pages/auth/RedefinirSenha'
 import BoasVindas from './pages/auth/BoasVindas'
+import Legal from './pages/Legal'
 import Dashboard from './pages/Dashboard'
 import Cursos from './pages/Cursos'
 import Curso from './pages/Curso'
@@ -23,18 +26,31 @@ import Configuracoes from './pages/Configuracoes'
 import Planos from './pages/Planos'
 import NaoEncontrada from './pages/NaoEncontrada'
 
-// Rotas alvo da identidade Foco (CLAUDE.md, seção 2.2). A proteção por login entra no Marco 2.
+// Rotas alvo da identidade Foco (CLAUDE.md, seção 2.2).
+// Sem .env.local o app roda em modo demonstração: as rotas protegidas ficam abertas.
 export default function App() {
   return (
     <Routes>
-      <Route element={<AuthLayout />}>
-        <Route path="entrar" element={<Entrar />} />
-        <Route path="criar-conta" element={<CriarConta />} />
-        <Route path="recuperar-senha" element={<RecuperarSenha />} />
-        <Route path="boas-vindas" element={<BoasVindas />} />
+      <Route element={<RotaPublica />}>
+        <Route element={<AuthDividido />}>
+          <Route path="entrar" element={<Entrar />} />
+          <Route path="criar-conta" element={<CriarConta />} />
+        </Route>
+        <Route element={<AuthCartao />}>
+          <Route path="recuperar-senha" element={<RecuperarSenha />} />
+        </Route>
       </Route>
 
-      <Route element={<Layout />}>
+      {/* Fora de RotaPublica: o link de recuperação chega com uma sessão aberta. */}
+      <Route element={<AuthCartao />}>
+        <Route path="redefinir-senha" element={<RedefinirSenha />} />
+      </Route>
+      <Route path="termos" element={<Legal titulo="Termos de uso" />} />
+      <Route path="privacidade" element={<Legal titulo="Política de privacidade" />} />
+
+      <Route element={<RotaProtegida />}>
+        <Route path="boas-vindas" element={<BoasVindas />} />
+        <Route element={<Layout />}>
         <Route index element={<Dashboard />} />
         <Route path="cursos" element={<Cursos />} />
         <Route path="cursos/:id" element={<Curso />} />
@@ -54,6 +70,7 @@ export default function App() {
         <Route path="configuracoes/:aba" element={<Configuracoes />} />
         <Route path="planos" element={<Planos />} />
         <Route path="*" element={<NaoEncontrada />} />
+        </Route>
       </Route>
     </Routes>
   )

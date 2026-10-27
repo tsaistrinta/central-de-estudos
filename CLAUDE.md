@@ -94,14 +94,24 @@ Busca global (06), novo material (17–18), nova matéria (10), novo evento (25)
 - `src/types/index.ts` — `Perfil`, `PlanoUsuario`, `CorMateria`, `Tier` e os campos novos da seção 6.
 - keep-alive com `curl -fsS`; `LICENSE` (MIT); README reconciliado.
 
-**Ainda NÃO existe:** projeto Supabase, migrations, auth, dados reais na sidebar/Início, busca Ctrl K (o campo é só visual), telas conectadas, testes.
+### Marco 2 — código pronto, falta ligar o Supabase
+- `supabase/migrations/20261027000000_schema_inicial.sql` — schema da seção 6 com RLS, **FKs compostas `(pai_id, usuario_id)`** (impedem apontar para dados de outra conta), índices, triggers de `atualizado_em`/`editado_em`, trigger de cadastro (perfil + plano Free) e RPC `definir_semestre_atual`.
+- `src/api/auth.ts` — login por e-mail, Google e Microsoft (`azure`), cadastro, recuperação/redefinição de senha, sair, perfil, mensagens de erro em PT-BR.
+- `src/lib/auth.tsx` — `AuthProvider` + `useAuth()` (sessão, perfil, `configurado`). Sem `.env.local` → **modo demonstração**: rotas abertas, nada é salvo.
+- `src/components/RotaProtegida.tsx` — `RotaProtegida` (exige login; manda para `/boas-vindas` até `onboarding_concluido`) e `RotaPublica`.
+- Telas 01–04 reais (`src/pages/auth`), `/redefinir-senha`, `/termos` e `/privacidade` (texto preliminar). Layouts `AuthDividido` (01–02) e `AuthCartao` (03).
+- Sidebar com menu do usuário (Configurações, Sair); Início com "Bom dia, <nome>".
+- Guia: [`docs/setup-supabase.md`](docs/setup-supabase.md).
+
+**Ainda NÃO existe:** projeto Supabase criado, dados reais na sidebar/Início, busca Ctrl K (o campo é só visual), CRUD das telas, testes.
 
 ---
 
 ## 4. Pendências imediatas
 
-1. Commitar/push a fundação Foco.
-2. Seguir para o **Marco 2** (seção 8). Na sidebar, "Sair" vai para o menu do usuário no rodapé.
+1. **Seguir `docs/setup-supabase.md`** (feito pelo usuário): criar o projeto, rodar a migration, configurar URLs, Resend, Google e Microsoft, preencher `.env.local` e os secrets do keep-alive.
+2. Rodar o checklist de teste do guia e corrigir o que falhar.
+3. Depois, **Marco 3** (seção 8).
 
 ---
 
@@ -272,7 +282,7 @@ create index on documentos using gin (busca);
 ## 8. Roadmap (próximos marcos)
 
 - **Marco 1.5 — Fundação Foco:** ✅ feito (seção 3).
-- **Marco 2 — Supabase vivo:** criar projeto (região São Paulo), rodar o schema, RLS, trigger de cadastro, auth (Google + Microsoft + e-mail/Resend), `.env.local`, telas 01–04, rotas protegidas, menu do usuário/Sair.
+- **Marco 2 — Supabase vivo:** 🟡 código pronto; falta o setup do guia. Criar projeto (região São Paulo), rodar o schema, RLS, trigger de cadastro, auth (Google + Microsoft + e-mail/Resend), `.env.local`, telas 01–04, rotas protegidas, menu do usuário/Sair.
 - **Marco 3 — CRUD real:** Cursos → Curso → Semestre → Matéria → Materiais (telas 07–16) via adaptador; favoritos, etiquetas, status de revisão, ações em lote, estados (33–37).
 - **Marco 4 — R2 + upload:** Edge Functions, URLs pré-assinadas, controle de cota (17, 30, 38), editor de código (18) e Biblioteca (26).
 - **Marco 5 — Documentos:** Tiptap + wikilinks + backlinks + grafo + importar (19–22).
