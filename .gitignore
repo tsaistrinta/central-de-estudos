@@ -34,3 +34,6 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Referências de design pesadas (PNGs/HTML ficam fora do git)
+docs/design/*.zip

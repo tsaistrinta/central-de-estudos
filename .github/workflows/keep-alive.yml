@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping Supabase REST
-        run: curl -s "$SUPABASE_URL/rest/v1/perfis?select=id&limit=1" -H "apikey: $SUPABASE_ANON_KEY" > /dev/null
+        run: curl -fsS "$SUPABASE_URL/rest/v1/perfis?select=id&limit=1" -H "apikey: $SUPABASE_ANON_KEY" > /dev/null
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}

@@ -27,17 +27,17 @@ O projeto nasceu como protótipo numa plataforma no-code (Base44) e está sendo 
 - **Dashboard** com próximos prazos, favoritos, adicionados recentemente e progresso por matéria.
 - **Materiais em 4 tipos:** arquivo (upload de PDF/slides/imagens), link, anotação e snippet de código com destaque de sintaxe.
 - **Documentos conectados** no estilo Obsidian: editor rich text, wikilinks `[[ ]]` com autocomplete, backlinks e visão em grafo interativa.
-- **Calendário de prazos** (provas, entregas e mais) e fila de **revisão** ("estudar depois" / "já revisei").
-- **Busca global** full-text em português e **filtros combinados** por matéria, tipo e etiqueta.
+- **Agenda de prazos** (provas, entregas e mais) e fila de **revisão** ("estudar depois" / "já revisei").
+- **Busca global** (Ctrl K) full-text em português e **filtros combinados** por matéria, tipo e etiqueta.
 - **Favoritos e etiquetas livres** em todo material e documento.
-- Interface clara e colorida, responsiva e 100% em português do Brasil.
+- Interface clara (identidade **Foco**), responsiva e 100% em português do Brasil.
 
 ## Stack utilizada
 
 | Camada | Tecnologias |
 |---|---|
-| **Front-end** | React, Vite, TypeScript, Tailwind CSS, shadcn/ui, Tiptap (editor), react-force-graph (grafo), FullCalendar (agenda) |
-| **Back-end** | Supabase — autenticação (OAuth Google + e-mail), API REST/Realtime e Edge Functions (Deno/TypeScript); Cloudflare R2 (armazenamento de arquivos, compatível com S3); Resend (e-mails) |
+| **Front-end** | React, Vite, TypeScript, Tailwind CSS v4, React Router, shadcn/ui, lucide-react. Previstos: Tiptap (editor), react-force-graph (grafo), FullCalendar (agenda) |
+| **Back-end** | Supabase — autenticação (OAuth Google e Microsoft + e-mail), API REST/Realtime e Edge Functions (Deno/TypeScript); Cloudflare R2 (armazenamento de arquivos, compatível com S3); Resend (e-mails) |
 | **Banco de dados** | PostgreSQL (gerenciado pelo Supabase), com Row Level Security e busca full-text |
 | **Infra / Deploy** | Cloudflare Pages (hospedagem com CI/CD); GitHub Actions (keep-alive) |
 
@@ -63,27 +63,26 @@ O navegador envia e baixa arquivos **direto do R2** por URLs pré-assinadas de v
 central-de-estudos/
 ├─ public/              # estáticos (_redirects para SPA, ícone do app)
 ├─ src/
-│  ├─ api/              # adaptador do "motor": entities.ts, upload.ts
-│  ├─ assets/           # imagens e fontes
-│  ├─ components/       # UI reutilizável (shadcn/ui)
-│  ├─ features/         # por domínio: cursos, semestres, materias,
-│  │                    #   materiais, documentos, calendario, biblioteca, revisar
-│  ├─ hooks/            # hooks React
-│  ├─ lib/              # clientes e utilitários (supabase.ts, utils)
-│  ├─ pages/            # telas/rotas
-│  ├─ styles/           # estilos globais e tema
+│  ├─ api/              # adaptador de dados: entities.ts
+│  ├─ components/       # layout e componentes do app
+│  │  └─ ui/            # primitivos do shadcn/ui
+│  ├─ lib/              # clientes e utilitários (supabase.ts, utils.ts)
+│  ├─ pages/            # telas/rotas (auth/ para as telas públicas)
 │  ├─ types/            # tipos TypeScript
+│  ├─ index.css         # tokens da identidade Foco
 │  ├─ App.tsx
 │  └─ main.tsx
-├─ supabase/
-│  ├─ migrations/       # schema SQL (tabelas, RLS, triggers)
-│  └─ functions/        # Edge Functions do R2 (upload-url, confirmar-upload, download-url)
-├─ docs/                # diagrama e documentação de arquitetura
+├─ docs/
+│  ├─ arquitetura.md    # diagrama e documentação de arquitetura
+│  └─ design/           # identidade Foco: tokens, regras e as 39 telas
 ├─ .github/workflows/   # keep-alive (ping anti-pausa do Supabase)
 ├─ .env.example         # modelo das variáveis de ambiente
-├─ .gitignore
+├─ CLAUDE.md            # briefing do projeto
+├─ LICENSE
 └─ README.md
 ```
+
+Previstos nos próximos marcos: `supabase/migrations` (schema, RLS, triggers), `supabase/functions` (upload-url, confirmar-upload, download-url) e `src/api/upload.ts`.
 
 ## Como rodar localmente
 
