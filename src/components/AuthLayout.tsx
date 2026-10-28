@@ -12,9 +12,9 @@ const destaques = [
 export function AuthDividido() {
   return (
     <div className="grid min-h-screen lg:grid-cols-[600px_1fr]">
-      <aside className="hidden flex-col bg-foreground px-14 py-12 text-card lg:flex">
+      <aside className="hidden flex-col bg-dark px-14 py-12 text-dark-foreground lg:flex">
         <div className="flex items-center gap-2.5">
-          <ChipLogo className="size-7 text-card [&_circle]:fill-foreground [&_path]:stroke-foreground" />
+          <ChipLogo className="size-7 text-dark-foreground [&_circle]:fill-dark [&_path]:stroke-dark" />
           <span className="text-[17px] font-semibold">Central de Estudos</span>
         </div>
         <div className="my-auto">

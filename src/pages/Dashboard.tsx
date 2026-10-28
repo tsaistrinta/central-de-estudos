@@ -67,7 +67,7 @@ export default function Dashboard() {
 
       <div className="grid gap-4 lg:grid-cols-[1.25fr_1fr_1fr]">
         {resumo.pendentes > 0 ? (
-          <section className="rounded-lg bg-foreground p-5 text-card">
+          <section className="rounded-lg bg-dark p-5 text-dark-foreground">
             <p className="text-4xl font-semibold">{resumo.pendentes}</p>
             <p className="mt-1 text-sm text-card/80">materiais esperando revisão</p>
             <Link to="/revisar" className="mt-4 inline-flex h-9 items-center rounded-md bg-card px-3.5 text-sm font-medium text-foreground">

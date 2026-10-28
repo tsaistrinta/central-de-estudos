@@ -52,6 +52,7 @@ Nasceu como protótipo no **Base44** (no-code) e está sendo reconstruído com s
 - **Fontes (Google Fonts):** **Geist** (tudo) e **Geist Mono** (datas, números, atalhos, código).
 - **Uma única cor de ação:** azul `#2f4ad0` (hover `#2740b8`, fundo suave `#eaeefc`).
 - **Tokens no padrão shadcn/ui** (`--background`, `--card`, `--foreground`, `--muted-foreground`, `--border`, `--primary`, `--accent`, `--ring`, `--success`, `--warning`, `--destructive`, `--highlight`…). Valores completos no doc de design. ⚠️ No shadcn, `accent` é o **fundo suave azul**, não uma cor de destaque.
+- **Superfícies escuras** (painel do login, card "esperando revisão", botão `dark`): azul-marinho claro `--dark: #14275a` (classes `bg-dark`/`text-dark-foreground`). Decisão do usuário, substitui o quase-preto `#14171f` do doc de design; o texto continua em `--foreground`.
 - **8 cores de matéria/grupo** (nomes fixos): `cobalto`, `azul`, `petroleo`, `verde`, `mostarda`, `laranja`, `framboesa`, `roxo`. Usadas só como ponto de 8 px ou quadrado de 30–36 px com ícone branco — **sem faixas coloridas em cards**.
 - **11 cores de tipo de evento** (`--evt-*`): pílula com texto na cor e fundo a 13%.
 - **Status:** "Estudar depois" = aviso (`#b7700b`/`#fbf0dc`); "Já revisei" = sucesso (`#16834f`/`#e6f4ec`).

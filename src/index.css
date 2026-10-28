@@ -34,6 +34,10 @@
   --destructive-soft: #fbeaea;
   --highlight: #fdf0b8;
 
+  /* superfícies escuras: painel do login, card de revisão, botão "dark" */
+  --dark: #14275a;
+  --dark-foreground: #ffffff;
+
   --radius: 8px;
 
   /* cores de matéria e grupo (paleta fixa) */
@@ -88,6 +92,8 @@
   --color-destructive: var(--destructive);
   --color-destructive-soft: var(--destructive-soft);
   --color-highlight: var(--highlight);
+  --color-dark: var(--dark);
+  --color-dark-foreground: var(--dark-foreground);
 
   --color-materia-cobalto: var(--subject-cobalto);
   --color-materia-azul: var(--subject-azul);
