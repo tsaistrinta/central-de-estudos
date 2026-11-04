@@ -8,25 +8,22 @@ import RecuperarSenha from './pages/auth/RecuperarSenha'
 import RedefinirSenha from './pages/auth/RedefinirSenha'
 import BoasVindas from './pages/auth/BoasVindas'
 import Legal from './pages/Legal'
-import Dashboard from './pages/Dashboard'
-import Cursos from './pages/Cursos'
-import Curso from './pages/Curso'
-import Semestres from './pages/Semestres'
-import Semestre from './pages/Semestre'
-import Materia from './pages/Materia'
-import Materiais from './pages/Materiais'
-import Documentos from './pages/Documentos'
-import Documento from './pages/Documento'
-import Grafo from './pages/Grafo'
-import Importar from './pages/Importar'
+import Hoje from './pages/Hoje'
 import Agenda from './pages/Agenda'
-import Biblioteca from './pages/Biblioteca'
+import Materias from './pages/Materias'
+import Materia from './pages/Materia'
+import Entrada from './pages/Entrada'
+import Tarefas from './pages/Tarefas'
 import Revisar from './pages/Revisar'
+import Notas from './pages/Notas'
+import Turma from './pages/Turma'
+import Curso from './pages/Curso'
+import Unidade from './pages/Unidade'
+import Admin from './pages/admin/Admin'
 import Configuracoes from './pages/Configuracoes'
-import Planos from './pages/Planos'
 import NaoEncontrada from './pages/NaoEncontrada'
 
-// Rotas alvo da identidade Foco (CLAUDE.md, seção 2.2).
+// Rotas da nova direção (Central para a Fatec, com a Yara). Mockups: telas 01–26.
 // Sem .env.local o app roda em modo demonstração: as rotas protegidas ficam abertas.
 export default function App() {
   return (
@@ -51,25 +48,35 @@ export default function App() {
       <Route element={<RotaProtegida />}>
         <Route path="boas-vindas" element={<BoasVindas />} />
         <Route element={<Layout />}>
-        <Route index element={<Dashboard />} />
-        <Route path="cursos" element={<Cursos />} />
-        <Route path="cursos/:id" element={<Curso />} />
-        <Route path="semestres" element={<Semestres />} />
-        <Route path="semestres/:id" element={<Semestre />} />
-        <Route path="materias/:id" element={<Materia />} />
-        <Route path="materiais" element={<Materiais />} />
-        <Route path="documentos" element={<Documentos />} />
-        <Route path="documentos/grafo" element={<Grafo />} />
-        <Route path="documentos/importar" element={<Importar />} />
-        <Route path="documentos/:id" element={<Documento />} />
-        <Route path="agenda" element={<Agenda />} />
-        <Route path="calendario" element={<Navigate to="/agenda" replace />} />
-        <Route path="biblioteca" element={<Biblioteca />} />
-        <Route path="revisar" element={<Revisar />} />
-        <Route path="configuracoes" element={<Configuracoes />} />
-        <Route path="configuracoes/:aba" element={<Configuracoes />} />
-        <Route path="planos" element={<Planos />} />
-        <Route path="*" element={<NaoEncontrada />} />
+          {/* Meu espaço · privado */}
+          <Route index element={<Hoje />} />
+          <Route path="agenda" element={<Agenda />} />
+          <Route path="materias" element={<Materias />} />
+          <Route path="materias/:id" element={<Materia />} />
+          <Route path="entrada" element={<Entrada />} />
+          <Route path="tarefas" element={<Tarefas />} />
+          <Route path="revisao" element={<Revisar />} />
+          <Route path="notas" element={<Notas />} />
+
+          {/* Comunidade */}
+          <Route path="turma" element={<Turma />} />
+          <Route path="turmas/:id" element={<Turma />} />
+          <Route path="curso" element={<Curso />} />
+          <Route path="unidade" element={<Unidade />} />
+
+          {/* Administração (papel admin, Fase 7) */}
+          <Route path="admin" element={<Navigate to="/admin/visao" replace />} />
+          <Route path="admin/:aba" element={<Admin />} />
+
+          <Route path="configuracoes" element={<Configuracoes />} />
+          <Route path="configuracoes/:aba" element={<Configuracoes />} />
+
+          {/* Endereços antigos */}
+          <Route path="calendario" element={<Navigate to="/agenda" replace />} />
+          <Route path="revisar" element={<Navigate to="/revisao" replace />} />
+          <Route path="materiais" element={<Navigate to="/materias" replace />} />
+
+          <Route path="*" element={<NaoEncontrada />} />
         </Route>
       </Route>
     </Routes>

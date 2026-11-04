@@ -1,5 +1,5 @@
 import PageStub from '@/components/PageStub'
 
 export default function Revisar() {
-  return <PageStub titulo="Revisar agora" descricao="Fila dos materiais marcados como “Estudar depois”." tela="27" />
+  return <PageStub titulo="Revisão" descricao="Plano dia a dia até a prova, com revisão espaçada." tela="05" />
 }

@@ -4,12 +4,12 @@
 
 # Central de Estudos
 
-**Repositório pessoal para centralizar, organizar e encontrar rapidamente todo o material de estudo de cursos.**
+**Plataforma de estudos da Fatec Indaiatuba que se alimenta sozinha, com a Yara, uma IA local.**
 
-![Status](https://img.shields.io/badge/status-em%20desenvolvimento-7c3aed)
+![Status](https://img.shields.io/badge/status-em%20desenvolvimento-2f4ad0)
 ![Front-end](https://img.shields.io/badge/front--end-React%20%2B%20Vite%20%2B%20TS-61dafb)
 ![Back-end](https://img.shields.io/badge/back--end-Supabase%20%2B%20Cloudflare%20R2-3ecf8e)
-![Banco](https://img.shields.io/badge/banco-PostgreSQL-336791)
+![IA](https://img.shields.io/badge/IA-Ollama%20%2B%20Qwen-14275a)
 ![Licença](https://img.shields.io/badge/licença-MIT-black)
 
 </div>
@@ -18,26 +18,25 @@
 
 ## Sobre o projeto
 
-A **Central de Estudos** é um aplicativo web para o estudante guardar e reencontrar tudo o que acumula ao longo de seus cursos: arquivos, links, anotações e trechos de código, organizados numa hierarquia **Curso → Semestre → Matéria → Material**. Cada usuário tem login próprio e seus dados são privados.
+A **Central de Estudos** é o PTG de Análise e Desenvolvimento de Sistemas da Fatec Indaiatuba. Hoje o aluno caça informação no site, em PDFs, no e-mail e na fala do professor, e copia tudo à mão. Na Central, a **Yara** lê o que a Fatec já publica (site da unidade, calendário acadêmico, grade de horários, editais, planos de ensino) e monta sozinha a agenda, os horários, as tarefas e os avisos de cada aluno, sempre mostrando a fonte.
 
-O projeto nasceu como protótipo numa plataforma no-code (Base44) e está sendo reconstruído com stack própria, de código aberto e sem custo de lançamento, visando evoluir para um produto com planos de armazenamento.
+Secretaria e coordenação não fazem nenhum trabalho extra. Quando a Yara não tem certeza, a própria turma confirma com votos visíveis.
 
 ## Funcionalidades
 
-- **Dashboard** com próximos prazos, favoritos, adicionados recentemente e progresso por matéria.
-- **Materiais em 4 tipos:** arquivo (upload de PDF/slides/imagens), link, anotação e snippet de código com destaque de sintaxe.
-- **Documentos conectados** no estilo Obsidian: editor rich text, wikilinks `[[ ]]` com autocomplete, backlinks e visão em grafo interativa.
-- **Agenda de prazos** (provas, entregas e mais) e fila de **revisão** ("estudar depois" / "já revisei").
-- **Busca global** (Ctrl K) full-text em português e **filtros combinados** por matéria, tipo e etiqueta.
-- **Favoritos e etiquetas livres** em todo material e documento.
-- Interface clara (identidade **Foco**), responsiva e 100% em português do Brasil.
+- **Agenda no padrão Outlook:** dia, semana, mês e lista; camadas por disciplina e da Fatec; arrastar e redimensionar; criação por frase; link .ics para o Outlook, Google ou iPhone.
+- **Hoje:** resumo do dia da Yara, aulas, próximas provas e o que mudou.
+- **Espaço pessoal:** matérias e materiais, caixa de entrada, tarefas (Kanban), plano de revisão até a prova, notas e faltas.
+- **Comunidade:** turma com conversa, mural, materiais, dúvidas respondidas com fonte e **validação coletiva**.
+- **Painel admin:** fontes monitoradas, curadoria da IA, contas e papéis, servidor.
+- Cadastro só com e-mail institucional, confirmado por código. Interface clara (identidade **Foco**), responsiva e em português do Brasil.
 
 ## Stack utilizada
 
 | Camada | Tecnologias |
 |---|---|
-| **Front-end** | React, Vite, TypeScript, Tailwind CSS v4, React Router, shadcn/ui, lucide-react. Previstos: Tiptap (editor), react-force-graph (grafo), FullCalendar (agenda) |
-| **Back-end** | Supabase — autenticação (OAuth Google e Microsoft + e-mail), API REST/Realtime e Edge Functions (Deno/TypeScript); Cloudflare R2 (armazenamento de arquivos, compatível com S3); Resend (e-mails) |
+| **Front-end** | React, Vite, TypeScript, Tailwind CSS v4, React Router, shadcn/ui, lucide-react. Previstos: FullCalendar (agenda), TanStack Query, dnd-kit |
+| **Back-end** | Supabase — autenticação por código no e-mail institucional, API REST/Realtime e Edge Functions (Deno/TypeScript); Cloudflare R2 (armazenamento de arquivos, compatível com S3); Resend (e-mails) |
 | **Banco de dados** | PostgreSQL (gerenciado pelo Supabase), com Row Level Security e busca full-text |
 | **Infra / Deploy** | Cloudflare Pages (hospedagem com CI/CD); GitHub Actions (keep-alive) |
 
@@ -64,7 +63,9 @@ central-de-estudos/
 ├─ public/              # estáticos (_redirects para SPA, ícone do app)
 ├─ src/
 │  ├─ api/              # adaptador de dados: entities.ts
-│  ├─ components/       # layout e componentes do app
+│  ├─ components/       # layout (sidebar, trilho) e componentes do app
+│  │  ├─ agenda/        # painel de calendários, minicalendário
+│  │  ├─ foco/          # selos de origem, pílulas de evento
 │  │  └─ ui/            # primitivos do shadcn/ui
 │  ├─ lib/              # clientes e utilitários (supabase.ts, utils.ts)
 │  ├─ pages/            # telas/rotas (auth/ para as telas públicas)
@@ -74,7 +75,7 @@ central-de-estudos/
 │  └─ main.tsx
 ├─ docs/
 │  ├─ arquitetura.md    # diagrama e documentação de arquitetura
-│  └─ design/           # identidade Foco: tokens, regras e as 39 telas
+│  └─ design/           # identidade Foco e mockups 01–26 (zip fora do git)
 ├─ .github/workflows/   # keep-alive (ping anti-pausa do Supabase)
 ├─ .env.example         # modelo das variáveis de ambiente
 ├─ CLAUDE.md            # briefing do projeto
@@ -82,7 +83,7 @@ central-de-estudos/
 └─ README.md
 ```
 
-Previstos nos próximos marcos: `supabase/migrations` (schema, RLS, triggers), `supabase/functions` (upload-url, confirmar-upload, download-url) e `src/api/upload.ts`.
+Previstos: `supabase/functions` (upload no R2, hook de domínio, .ics) e `workers/yara/` (coletor + IA local).
 
 ## Como rodar localmente
 
@@ -108,9 +109,7 @@ O app sobe em `http://localhost:5173`.
 
 ## Roadmap
 
-- **v1 — Free (atual):** stack gratuita, cota de 200 MB por usuário, arquivos no R2.
-- **v2 — Planos pagos:** integração com Stripe (assinaturas + "GB extra"), Supabase Pro (backup e sem pausa), cotas por plano (Free 200 MB · Plus 5 GB · Pro 50 GB).
-- **v3 — Mobile:** PWA instalável; app nativo (React Native/Expo) como trabalho futuro.
+Fases 0 e 1 feitas (base visual e navegação). Próximas: 2 · Supabase e login por código → 3 · agenda e espaço pessoal → 4 · comunidade e validação coletiva → 5–6 · Yara → 7 · painel admin → 8 · piloto com a turma → 9 · avaliação do PTG. Detalhes em `CLAUDE.md`.
 
 ## Autor
 
