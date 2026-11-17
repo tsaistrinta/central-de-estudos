@@ -4,7 +4,7 @@ import { ExternalLink } from 'lucide-react'
 import { tenantAtual } from '@/api/academico'
 import { eventosNoIntervalo } from '@/api/agenda'
 import { Cartao, Esqueleto, Vazio } from './Base'
-import { PilulaEvento, SeloStatus, SeloYara } from './Selos'
+import { PilulaEvento, SeloStatus, SeloArchie } from './Selos'
 import type { EscopoEvento } from '@/types'
 
 // Lista de datas da unidade ou do curso, sempre com a fonte (telas 11 e 15).
@@ -26,7 +26,7 @@ export default function EventosOficiais({ escopo, titulo }: { escopo: EscopoEven
       </span>
       <span className="min-w-0 flex-1 text-sm font-medium">{e.titulo}</span>
       <PilulaEvento tipo={e.tipo} />
-      {e.origem === 'yara' ? <SeloYara rotulo="Captado do site" /> : <SeloStatus status={e.status} />}
+      {e.origem === 'archie' ? <SeloArchie rotulo="Captado do site" /> : <SeloStatus status={e.status} />}
       {e.documento_url && (
         <a href={e.documento_url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary" aria-label="Ver a fonte">
           <ExternalLink size={14} />
@@ -40,7 +40,7 @@ export default function EventosOficiais({ escopo, titulo }: { escopo: EscopoEven
       {eventos.isLoading ? (
         <Esqueleto />
       ) : lista.length === 0 ? (
-        <Vazio>Nenhuma data ainda. A Yara preenche lendo o site da Fatec (Fase 5).</Vazio>
+        <Vazio>Nenhuma data ainda. O Archie preenche lendo o site da Fatec (Fase 5).</Vazio>
       ) : (
         <div className="px-4 pb-3">
           <ul>{proximos.map((e) => <Linha key={e.id} e={e} />)}</ul>

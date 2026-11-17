@@ -1,0 +1,111 @@
+# Archie v1 (Fase 5) — como funciona e como ligar
+
+> O nome é uma homenagem ao Dr. Archimedes Lammoglia, patrono da Fatec Indaiatuba.
+
+O Archie é o worker em `workers/archie/` (Python 3.12 + Ollama). Roda no seu PC, **só faz conexões de saída**
+(site da Fatec, banco do Supabase e o Ollama local) e, se parar, o app continua no ar.
+
+```
+fontes (site) ──► coletor ──► mudou? ──► leitura ──► decisão ──► agenda / grade
+                  robots.txt   hash       posição      confiança     curadoria (admin)
+                  5 s/pedido   por PDF    ou IA        ≥ 0,85 / 0,6   histórico
+```
+
+## O que ele lê hoje
+
+| Fonte (seed) | Lê como | Como | Resultado |
+|---|---|---|---|
+| Calendário Acadêmico | `calendario` | acha o PDF na página; tira a grade de números de cada mês; a IA (Qwen3.5) devolve as datas em JSON | eventos da unidade ou do curso (os de outros cursos são ignorados) |
+| Grade de Horários e Salas | `grade` | baixa só os PDFs dos cursos do tenant; **lê pela posição do texto** (coluna = semestre, linha = par de horários); se o layout mudar, a IA olha a página como imagem | aulas, salas e professores de cada turma |
+| Home do site | `avisos` | banners e "comunicado importante" são imagens: a IA (visão) diz se é aviso para alunos e tira as datas | eventos prováveis + texto do aviso |
+| Editais | `geral` | só guarda o texto | base de conhecimento (busca da Fase 6) |
+
+Teste real (16/11): o PDF `ADS_NOT.pdf` (2026/2) foi lido inteiro pela posição — 34 aulas do 3º ao 6º semestre,
+sem IA. Ele mostrou que o seed provisório estava errado (ex.: IHC e Sociedade e Tecnologia são do 4º semestre;
+o 3º tem Inglês III, Economia e Finanças e G.G.T.I.). Os testes usam as posições reais desse PDF
+(`workers/archie/tests/fixtures/`).
+
+## Regras de publicação
+
+- **≥ 0,85** → publica sozinho como **Oficial**, com o link da fonte (`eventos.origem = 'archie'`, `fonte_id`, `documento_url`).
+- **≥ 0,6** → publica como **Provável** e abre um item na curadoria.
+- **< 0,6** → não publica; só o item na curadoria.
+- Data que **mudou** (mesmo título, outra data até 45 dias): aplica sozinho se a confiança for alta; avisa quem editou a própria versão (`evento_override`) com uma notificação "a data oficial mudou".
+- Algo que **sumiu** da nova versão do PDF: nunca cancela sozinho; vai para a curadoria.
+- **Disciplina nova** lida da grade: vai para a curadoria (há um botão "Aprovar as N disciplinas da grade"). Para criar sozinho, `ARCHIE_AUTO_ESTRUTURA=true`.
+- Eventos manuais, do professor e da turma **nunca** são alterados. Leitura por imagem nunca passa de "Provável".
+- O mesmo item não é proposto de novo — nem depois de você recusar.
+
+Tudo passa pela tabela `curadoria`: o que o Archie aplicou sozinho fica com `decisao = 'aprovado'` e `decidido_por` vazio.
+Em **/admin/curadoria** você vê o que está pendente e o histórico; em **/admin/fontes**, a última leitura de cada
+fonte, os erros e o botão **Verificar agora**; em **/admin/servidor**, se o worker está no ar.
+
+## Ligar (uma vez)
+
+Pré-requisito: o Supabase do `docs/setup-supabase.md` já ligado.
+
+### 1. Banco
+
+1. **Database → Extensions**: ligue `vector`, `pgmq` e `pg_cron`.
+2. No **SQL Editor**, rode nesta ordem:
+   - `supabase/migrations/20261103000001_archie.sql`
+   - `supabase/migrations/20261116000000_archie_v1.sql`
+3. Se você rodou o `seed.sql` antes desta versão, as fontes já foram corrigidas pela migração (extrator e endereço com `index.php`). Se ainda não rodou, rode o seed depois das migrações.
+
+### 2. Ollama e modelos
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh     # Linux
+ollama pull qwen3.5:9b
+ollama pull qwen3-embedding:0.6b
+```
+
+### 3. Worker
+
+```bash
+cd workers/archie
+python3.12 -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+cp .env.example .env          # preencha DATABASE_URL (Session pooler do Supabase)
+python -m archie status         # confere Ollama, modelos, banco e se o site deixa o coletor entrar
+python -m archie uma-vez --fonte "Grade" --forcar
+python -m archie rodar          # fica no ar
+```
+
+Ou com Docker (o Ollama continua no PC): `docker compose up -d --build` e `docker compose logs -f archie`.
+
+> A `DATABASE_URL` dá acesso total ao banco (como a service role). Fica só no `.env` deste PC, fora do git.
+
+### 4. Testar com documentos reais (sem gravar nada)
+
+```bash
+python -m archie testar ~/Downloads/ADS_NOT.pdf --extrator grade --sem-ia
+python -m archie testar https://www.fatecid.com.br/site/wp-content/uploads/2026/08/UN-12_03_26_Calendario-Academico-2026_retificado-sem-logo-2.pdf --extrator calendario
+python -m archie testar ~/Downloads/comunicado.png --extrator aviso
+```
+
+Bom para a avaliação do PTG: rode nos ~30 documentos reais e compare com o que está escrito.
+
+## Se o site recusar (403)
+
+Nos testes, algumas páginas internas do site (fora a home e os arquivos em `wp-content/uploads`) recusaram
+acesso automatizado. O coletor **não finge ser navegador**: se receber 401/403/429, a fonte fica com status
+`erro` e a mensagem aparece em /admin/fontes. O caminho certo é pedir à TI da unidade para liberar o
+User-Agent `CentralDeEstudos-Archie/0.1 (+https://github.com/tsaistrinta/central-de-estudos)`. Enquanto isso,
+dá para cadastrar como fonte o link direto do PDF (tipo `pdf`, extrator `calendario` ou `grade`).
+
+## Testes do worker
+
+```bash
+cd workers/archie
+python -m pytest                                    # sem banco: grade, calendário, coletor
+ARCHIE_TESTE_PG=postgresql://postgres@localhost:5432/postgres python -m pytest   # com Postgres 16 local
+```
+
+Os testes com banco criam um banco novo por teste com `tests/sql/montar_banco.sh` (stubs do Supabase + migrações + seed).
+
+## Próximo (Fase 6)
+
+Caixa de entrada (aluno encaminha e-mail/print), plano de ensino, print do SIGA, busca com RAG nos
+`conhecimento_trechos` que a v1 já guarda, resumo diário, e a tela "a data oficial mudou, aplicar?" para quem tem
+versão própria de um evento (as notificações já são gravadas).

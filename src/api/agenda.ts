@@ -68,7 +68,7 @@ export async function salvarPreferencias(valores: Partial<AgendaPreferencias>) {
   ok(await db().from('agenda_preferencias').upsert({ usuario_id: await meuId(), ...valores }))
 }
 
-/** Avisa quando algum evento visível muda (outra pessoa, professor ou Yara). */
+/** Avisa quando algum evento visível muda (outra pessoa, professor ou Archie). */
 export function ouvirEventos(aoMudar: () => void): () => void {
   if (modoDemo) return () => {}
   const canal = db()

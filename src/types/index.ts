@@ -99,7 +99,7 @@ export interface Evento {
   descricao?: string | null
   rrule?: string | null
   lembretes?: number[] | null
-  origem: 'manual' | 'yara' | 'professor' | 'turma' | 'importado'
+  origem: 'manual' | 'archie' | 'professor' | 'turma' | 'importado'
   documento_url?: string | null
   status: StatusInfo
   cancelado: boolean
@@ -224,7 +224,7 @@ export interface Proposta {
   alvo_evento_id?: string | null
   titulo: string
   dados: { titulo?: string; tipo?: TipoEvento; inicio?: string; fim?: string; local?: string; cancelado?: boolean }
-  origem: 'turma' | 'yara'
+  origem: 'turma' | 'archie'
   trecho_origem?: string | null
   status: StatusInfo
   criado_por?: string | null
@@ -254,4 +254,59 @@ export interface Fonte {
   frequencia_min: number
   ultima_verificacao?: string | null
   status: 'ativa' | 'pausada' | 'erro'
+  /** Como o Archie lê a fonte (Fase 5). */
+  extrator: ExtratorFonte
+  ultimo_erro?: string | null
+}
+
+export type ExtratorFonte = 'calendario' | 'grade' | 'avisos' | 'geral'
+
+/** Última visita do Archie a cada fonte (view ultimas_capturas). */
+export interface UltimaCaptura {
+  fonte_id: string
+  conteudo_url?: string | null
+  titulo?: string | null
+  itens: number
+  erro?: string | null
+  capturado_em: string
+}
+
+export type TipoCuradoria = 'evento_novo' | 'evento_provavel' | 'evento_mudanca' | 'evento_sumiu' | 'grade_turma' | 'disciplina_nova'
+
+/** O que o Archie quis mudar. Pendente = decisao nula; aplicado sozinho = aprovado sem decidido_por. */
+export interface ItemCuradoria {
+  id: string
+  item_tipo: TipoCuradoria
+  item_id?: string | null
+  dados: {
+    trecho?: string | null
+    documento_url?: string | null
+    evento?: { titulo: string; inicio: string; fim?: string | null; documento_url?: string | null }
+    aulas?: { dia_semana: number; inicio: string; fim: string; sala?: string | null }[]
+    antes?: { aulas: { dia_semana: number; inicio: string; fim: string; sala?: string | null }[]; professor_nome?: string | null }
+    professor_nome?: string | null
+    nome_no_pdf?: string
+    [chave: string]: unknown
+  }
+  resumo?: string | null
+  motivo?: string | null
+  confianca?: number | null
+  fonte_id?: string | null
+  decisao?: 'aprovado' | 'rejeitado' | null
+  decidido_por?: string | null
+  decidido_em?: string | null
+  criado_em: string
+}
+
+/** Sinal de vida do worker do Archie. */
+export interface ArchieStatus {
+  worker: string
+  versao?: string | null
+  modelos: Record<string, string>
+  iniciado_em?: string | null
+  ultimo_sinal: string
+  tarefa_atual?: string | null
+  processadas: number
+  erros: number
+  ultimo_erro?: string | null
 }

@@ -6,7 +6,7 @@ import { entrarNaTurma, membrosDaTurma, minhasTurmas, pessoas as buscarPessoas, 
 import { criarProposta, enviarMensagem, listarDuvidas, listarMensagens, listarPropostas, marcarResolvida, ouvirTurma, perguntar, reacoesDe, responder } from '@/api/comunidade'
 import { listarMateriais } from '@/api/espaco'
 import { Cabecalho, Cartao, Esqueleto, PontoMateria, Vazio } from '@/components/foco/Base'
-import { SeloStatus, SeloYara } from '@/components/foco/Selos'
+import { SeloStatus, SeloArchie } from '@/components/foco/Selos'
 import { Avatar } from '@/components/comunidade/Avatares'
 import Reacoes from '@/components/comunidade/Reacoes'
 import Votacao from '@/components/comunidade/Votacao'
@@ -91,7 +91,7 @@ function Mensagens({ turma, canal, pessoas, podeEscrever }: { turma: MinhaTurma;
                 <p className="mt-0.5 text-[14px] leading-relaxed whitespace-pre-wrap">{m.texto}</p>
                 {sugereData && (
                   <div className="mt-2 flex max-w-[560px] flex-wrap items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-[12.5px]">
-                    <SeloYara rotulo="Só você vê" />
+                    <SeloArchie rotulo="Só você vê" />
                     <span>
                       Parece uma data: <b>{entendida!.titulo}</b> · {entendida!.inicio!.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })}
                       {!entendida!.diaTodo && `, ${entendida!.inicio!.toTimeString().slice(0, 5)}`}
@@ -164,7 +164,7 @@ function Duvidas({ turma, pessoas }: { turma: MinhaTurma; pessoas: Map<string, P
         </Button>
       </form>
       <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Sparkles size={12} className="text-primary" /> Na Fase 6 a Yara responde primeiro, citando os materiais da turma.
+        <Sparkles size={12} className="text-primary" /> Na Fase 6 o Archie responde primeiro, citando os materiais da turma.
       </p>
       {duvidas.isLoading && <Esqueleto />}
       {duvidas.data?.length === 0 && <Vazio>Nenhuma dúvida ainda.</Vazio>}
@@ -194,10 +194,10 @@ function Duvidas({ turma, pessoas }: { turma: MinhaTurma; pessoas: Map<string, P
           </div>
           {d.respostas.map((r) => (
             <div key={r.id} className="flex gap-3 border-t border-muted bg-background/60 px-3.5 py-3">
-              <Avatar id={r.autor_id ?? 'yara'} pessoa={r.autor_id ? pessoas.get(r.autor_id) : { id: 'yara', nome: 'Yara', papel: 'aluno' }} tamanho={26} />
+              <Avatar id={r.autor_id ?? 'archie'} pessoa={r.autor_id ? pessoas.get(r.autor_id) : { id: 'archie', nome: 'Archie', papel: 'aluno' }} tamanho={26} />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                  <b className="text-[13px] text-foreground">{r.autor_id ? pessoas.get(r.autor_id)?.nome : 'Yara'}</b>
+                  <b className="text-[13px] text-foreground">{r.autor_id ? pessoas.get(r.autor_id)?.nome : 'Archie'}</b>
                   <PapelPill p={r.autor_id ? pessoas.get(r.autor_id) : undefined} />
                   {tempoRelativo(r.criado_em)}
                   {r.confirmada_por && <SeloStatus status="oficial" rotulo={`Confirmada por ${pessoas.get(r.confirmada_por)?.nome ?? 'professor'}`} />}
@@ -262,7 +262,7 @@ function Confirmacoes({ turma, pessoas, souProfessor }: { turma: MinhaTurma; pes
       <div className="flex flex-col gap-3 p-4">
         <div className="flex flex-wrap items-center gap-2">
           <SeloStatus status={p.status} />
-          {p.origem === 'yara' && <SeloYara rotulo="Proposto pela Yara" />}
+          {p.origem === 'archie' && <SeloArchie rotulo="Proposto pelo Archie" />}
           <span className="text-xs text-muted-foreground">
             {tempoRelativo(p.criado_em)}
             {p.criado_por && pessoas.get(p.criado_por) ? ` · por ${pessoas.get(p.criado_por)!.nome}` : ''}

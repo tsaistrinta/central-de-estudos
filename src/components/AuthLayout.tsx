@@ -3,9 +3,9 @@ import { CalendarDays, Sparkles, Users } from 'lucide-react'
 import ChipLogo from './ChipLogo'
 
 const destaques = [
-  { icone: Sparkles, titulo: 'A Yara faz o trabalho chato', texto: 'Lê o site da Fatec, os PDFs e os planos de ensino e monta sua agenda.' },
+  { icone: Sparkles, titulo: 'O Archie faz o trabalho chato', texto: 'Lê o site da Fatec, os PDFs e os planos de ensino e monta sua agenda.' },
   { icone: CalendarDays, titulo: 'Agenda que se atualiza sozinha', texto: 'Aulas, provas e entregas da sua turma, com a fonte de cada data.' },
-  { icone: Users, titulo: 'Sua turma confirma', texto: 'Quando a Yara não tem certeza, a turma vota e todo mundo vê quem votou.' },
+  { icone: Users, titulo: 'Sua turma confirma', texto: 'Quando o Archie não tem certeza, a turma vota e todo mundo vê quem votou.' },
 ]
 
 /** Telas 01–02 (entrar, criar conta): painel escuro à esquerda + formulário à direita. */

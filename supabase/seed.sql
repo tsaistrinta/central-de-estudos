@@ -1,6 +1,6 @@
 -- Seed do piloto: Fatec Indaiatuba · ADS · 2026/2.
 -- Rodar DEPOIS da migração. Confira nomes, horários e salas com a grade oficial do site
--- (a Yara passa a manter isso sozinha a partir da Fase 5).
+-- (o Archie passa a manter isso sozinho a partir da Fase 5).
 
 insert into public.tenants (id, nome, slug, dominios_permitidos, site_url, periodo_atual, inicio_periodo, fim_periodo) values
   ('00000000-0000-0000-0000-000000000001', 'Fatec Indaiatuba', 'fatec-indaiatuba',
@@ -40,14 +40,14 @@ insert into public.aulas_horario (turma_id, dia_semana, inicio, fim, sala) value
   ('00000000-0000-0000-0000-0000000000e4', 5, '19:00', '20:40', 'Sala 5'),
   ('00000000-0000-0000-0000-0000000000e2', 5, '20:50', '22:30', 'Sala 12');
 
--- Fontes que a Yara vai vigiar (Fase 5).
-insert into public.fontes (tenant_id, nome, url, tipo, frequencia_min) values
-  ('00000000-0000-0000-0000-000000000001', 'Home do site', 'https://www.fatecid.com.br/site/', 'pagina', 30),
-  ('00000000-0000-0000-0000-000000000001', 'Calendário Acadêmico', 'https://www.fatecid.com.br/site/calendario-academico/', 'pdf', 60),
-  ('00000000-0000-0000-0000-000000000001', 'Grade de Horários e Salas', 'https://www.fatecid.com.br/site/grade-de-horarios-e-salas/', 'pagina', 60),
-  ('00000000-0000-0000-0000-000000000001', 'Editais', 'https://www.fatecid.com.br/site/editais/', 'pagina', 120);
+-- Fontes que o Archie vigia (Fase 5). Os endereços com index.php são os que o site usa de verdade.
+insert into public.fontes (tenant_id, nome, url, tipo, extrator, frequencia_min) values
+  ('00000000-0000-0000-0000-000000000001', 'Home do site (avisos)', 'https://www.fatecid.com.br/site/', 'pagina', 'avisos', 60),
+  ('00000000-0000-0000-0000-000000000001', 'Calendário Acadêmico', 'https://www.fatecid.com.br/site/index.php/calendario-academico/', 'pagina', 'calendario', 120),
+  ('00000000-0000-0000-0000-000000000001', 'Grade de Horários e Salas', 'https://www.fatecid.com.br/site/index.php/grade-de-horarios-e-salas/', 'pagina', 'grade', 120),
+  ('00000000-0000-0000-0000-000000000001', 'Editais', 'https://www.fatecid.com.br/site/index.php/editais/', 'pagina', 'geral', 360);
 
--- Calendário acadêmico 2026/2 (lido do PDF do site; a Yara confere nas próximas versões).
+-- Calendário acadêmico 2026/2 (lido do PDF do site; o Archie confere nas próximas versões).
 insert into public.eventos (tenant_id, escopo, escopo_id, titulo, tipo, inicio, fim, dia_todo, origem, status, documento_url) values
   ('00000000-0000-0000-0000-000000000001', 'curso', '00000000-0000-0000-0000-0000000000a1', 'Semana de Tecnologia ADS', 'data_especial', '2026-10-05 00:00-03', '2026-10-10 23:59-03', true, 'importado', 'oficial', 'https://www.fatecid.com.br/site/calendario-academico/'),
   ('00000000-0000-0000-0000-000000000001', 'unidade', null, 'Feriado · Nossa Senhora Aparecida', 'data_especial', '2026-10-12 00:00-03', null, true, 'importado', 'oficial', 'https://www.fatecid.com.br/site/calendario-academico/'),
@@ -60,3 +60,7 @@ insert into public.eventos (tenant_id, escopo, escopo_id, titulo, tipo, inicio, 
   ('00000000-0000-0000-0000-000000000001', 'unidade', null, 'Fim do semestre letivo', 'data_especial', '2026-12-14 00:00-03', null, true, 'importado', 'oficial', 'https://www.fatecid.com.br/site/calendario-academico/'),
   ('00000000-0000-0000-0000-000000000001', 'unidade', null, 'Revisão de médias', 'data_especial', '2026-12-15 00:00-03', '2026-12-17 23:59-03', true, 'importado', 'oficial', 'https://www.fatecid.com.br/site/calendario-academico/'),
   ('00000000-0000-0000-0000-000000000001', 'unidade', null, 'Exames finais', 'prova', '2026-12-22 00:00-03', '2026-12-23 23:59-03', true, 'importado', 'oficial', 'https://www.fatecid.com.br/site/calendario-academico/');
+
+-- Liga as datas acima à fonte, para o Archie conferir com as próximas versões do PDF.
+update public.eventos set fonte_id = (select id from public.fontes where extrator = 'calendario' limit 1)
+where origem = 'importado' and documento_url like '%calendario-academico%';

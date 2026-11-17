@@ -1,4 +1,4 @@
--- Yara (Fase 5): base de conhecimento (pgvector) e fila de tarefas (pgmq).
+-- Archie (Fase 5): base de conhecimento (pgvector) e fila de tarefas (pgmq).
 -- No Supabase: Database → Extensions → ligar "vector" e "pgmq" antes de rodar.
 create extension if not exists vector with schema extensions;
 create extension if not exists pgmq;
@@ -17,7 +17,7 @@ create index on public.conhecimento_trechos using hnsw (embedding extensions.vec
 alter table public.conhecimento_trechos enable row level security;
 create policy "conhecimento: admin" on public.conhecimento_trechos for select using (public.sou_admin());
 
-select pgmq.create('yara_jobs');
+select pgmq.create('archie_jobs');
 
 -- Expirar propostas sem quórum (72 h). Ligue "pg_cron" em Database → Extensions.
 create extension if not exists pg_cron;

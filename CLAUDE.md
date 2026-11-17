@@ -8,21 +8,23 @@
 
 ## 0. Estado do repositório
 
-- **Repo:** https://github.com/tsaistrinta/central-de-estudos (público, `main`). **Local:** `C:\dev\central-de-estudos`.
-- **Nova direção (03/11/2026):** o app pessoal antigo (cursos/semestres, documentos conectados, grafo, biblioteca de código, planos pagos) foi substituído pela Central para a Fatec com a IA **Yara**. O app fica na raiz do repo (sem monorepo); o worker da IA entra em `workers/yara/` na Fase 5.
-- **Fases 0 a 4: código feito** (seção 8). Falta o Lucas ligar o Supabase (passo a passo em `docs/setup-supabase.md`). Próxima: **Fase 5** (Yara v1).
+- **Repo:** https://github.com/tsaistrinta/central-de-estudos (público, `main`). **Local:** `/home/lucas/central-de-estudos` (Linux; antes `C:\dev\central-de-estudos`).
+- **Nova direção (03/11/2026):** o app pessoal antigo (cursos/semestres, documentos conectados, grafo, biblioteca de código, planos pagos) foi substituído pela Central para a Fatec com a IA **Archie**. O app fica na raiz do repo (sem monorepo); o worker da IA entra em `workers/archie/` na Fase 5.
+- **Fases 0 a 5: código feito** (seção 8). Falta o Lucas ligar o Supabase (`docs/setup-supabase.md`) e o Archie (`docs/archie.md`). Próxima: **Fase 6** (Archie v2).
 
 ---
 
 ## 1. O que é o projeto
 
-PTG de ADS da **Fatec Indaiatuba** (autor: Lucas Tsai). Plataforma de estudos que **se alimenta sozinha**: a Yara, uma IA local, lê o site da unidade (fatecid.com.br), PDFs, planos de ensino e as conversas da turma, e monta agenda, horários, tarefas e avisos para cada aluno. Piloto com a turma do Lucas. UI toda em **português do Brasil**, tema claro, responsiva, PWA.
+PTG de ADS da **Fatec Indaiatuba** (autor: Lucas Tsai). Plataforma de estudos que **se alimenta sozinha**: o Archie, uma IA local, lê o site da unidade (fatecid.com.br), PDFs, planos de ensino e as conversas da turma, e monta agenda, horários, tarefas e avisos para cada aluno. Piloto com a turma do Lucas. UI toda em **português do Brasil**, tema claro, responsiva, PWA.
+
+**Nome da IA: Archie**, em homenagem ao Dr. Archimedes Lammoglia, patrono da Fatec Indaiatuba ("Fatec Indaiatuba – Dr. Archimedes Lammoglia"). Nome decidido pelo Lucas em 16/11/2026; usar sempre "o Archie" (masculino) nos textos.
 
 ### Regras do produto (não negociáveis)
 - **Zero trabalho extra para secretaria e coordenação.** Tudo da instituição vem de coleta automática.
 - **Cadastro só com e-mail institucional** de domínio permitido do tenant (`@aluno.cps.sp.gov.br`), validado por **código de 6 dígitos** (OTP). Sem login social.
 - **Nunca** pedir ou guardar a senha do SIGA.
-- **Edição do aluno nunca é sobrescrita** pela Yara: ela pergunta "a data oficial mudou, aplicar?" (`evento_override`).
+- **Edição do aluno nunca é sobrescrita** pelo Archie: ele pergunta "a data oficial mudou, aplicar?" (`evento_override`).
 - **Toda informação captada mostra a origem** (selo + link da fonte): Oficial · Provável · Esperando a turma · Confirmado pela turma · Descartado.
 - **Validação coletiva:** base = vagas da turma no site (`turmas.tamanho_real`) ou, se nulo, membros da turma. Confirma com sim ≥ max(5, 25% da base) **e** sim ≥ 80% dos votos. Descarta se não > 50% com quórum ou após 72 h. Professor ou fonte oficial fecham na hora. Só alunos matriculados votam; votos visíveis (avatares, clique mostra a lista).
 - **Reações:** um componente único com lista de quem reagiu (mural, conversa, dúvidas, materiais).
@@ -39,7 +41,7 @@ Aluno (padrão) · Monitor · Representante · Professor (aprovado pelo admin) �
 |---|---|
 | Front-end | React 19 + Vite + TypeScript, Tailwind v4, React Router, lucide-react, shadcn/ui. Por fase: **FullCalendar 6** (agenda), **TanStack Query**, dnd-kit (Kanban), vite-plugin-pwa |
 | Back-end | Supabase (Auth OTP + Postgres + RLS + Realtime + Edge Functions + pgvector + pgmq). **Cloudflare R2** para arquivos (URL pré-assinada). Resend para os códigos |
-| IA (Fase 5) | `workers/yara`: Python 3.12 + Docker; httpx, trafilatura, PyMuPDF; Ollama com `qwen3.5:9b` (texto+imagem), `qwen3.5:4b`, `qwen3-embedding:0.6b`. Roda no PC do Lucas; só conexões de saída (puxa jobs da fila) |
+| IA (Fase 5) | `workers/archie`: Python 3.12 + Docker; httpx, trafilatura, PyMuPDF, psycopg 3; Ollama com `qwen3.5:9b` (texto+imagem, JSON com esquema) e `qwen3-embedding:0.6b`. Roda no PC do Lucas; só conexões de saída (fila pgmq + fontes vencidas). Detalhes em `docs/archie.md` |
 | Infra | Cloudflare Pages. GitHub Actions (keep-alive). Domínio: centraldeestudos.com.br (a confirmar) |
 
 O front **nunca** recebe credenciais do R2 nem a service role.
@@ -49,7 +51,7 @@ O front **nunca** recebe credenciais do R2 nem a service role.
 - 8 cores de matéria (`cobalto` … `roxo`) e 11 de tipo de evento (`--evt-*`, pílula com fundo a 13%).
 - Sidebar fixa **224 px** com "Meu espaço · privado" (Hoje, Agenda, Minhas matérias, Caixa de entrada, Tarefas, Revisão, Notas e faltas) e "Comunidade" (Minha turma, Meu curso, Fatec · unidade, disciplinas). **Na Agenda vira trilho de ícones de 68 px** (`AppRail`).
 - Raio 8 cartões, 6 botões/campos, 12 modais, 999 pílulas. Controles 34–36 px. Ícones Lucide traço 1.75.
-- Componentes Foco em `src/components/foco/` (`SeloStatus`, `SeloYara`, `PilulaEvento`, `EtiquetaEvento`).
+- Componentes Foco em `src/components/foco/` (`SeloStatus`, `SeloArchie`, `PilulaEvento`, `EtiquetaEvento`).
 
 ### 2.2 Rotas
 
@@ -77,18 +79,18 @@ Telas do professor (12–13) entram na Fase 4. Novo evento (23) e cartão do eve
 
 - Padrão Outlook com visual Foco: trilho + painel de calendários (260 px: Novo evento, minicalendário, camadas com checkbox colorido) + barra (Hoje, ← →, título, Dia/Semana útil/Semana/Mês/Lista, filtro, busca).
 - FullCalendar 6 (`timeGrid`, `dayGrid`, `list`, `interaction`) com `eventContent` próprio; 08–23 h, slots de 30 min, snap 15 min, linha do agora.
-- Evento: fundo da cor da matéria a 12%, barra esquerda 3 px. Prova = etiqueta PROVA; entrega = ENTREGA; proposta = tracejado âmbar; sugestão da Yara = listras azuis; cancelado = riscado a 55%; trabalho = hachurado.
+- Evento: fundo da cor da matéria a 12%, barra esquerda 3 px. Prova = etiqueta PROVA; entrega = ENTREGA; proposta = tracejado âmbar; sugestão do Archie = listras azuis; cancelado = riscado a 55%; trabalho = hachurado.
 - Cartão rápido ao clicar, criação por frase, arrastar/redimensionar com update otimista, atalhos (N, T, D, U, W, M, L, ← →, /, Ctrl+J), prefetch ±3 semanas, Realtime, link .ics pessoal.
 - **Feito (Fase 3):** `src/pages/Agenda.tsx` + `src/components/agenda/` (Calendario com FullCalendar 6, CartaoEvento, NovoEvento com frase e horários livres, PainelCalendarios com camadas salvas nas preferências, `useDadosAgenda` com cache/prefetch/Realtime). Regras em `src/lib/agenda.ts` (`montarItens`): aulas da grade expandidas por dia, feriado e aula cancelada tiram a aula, prova no horário da aula ocupa o lugar dela, propostas abertas aparecem tracejadas. Parser de frases em `src/lib/frase.ts`.
 ---
 
 ## 4. Modelo de dados
 
-Schema em `supabase/migrations/20261027000000_schema_inicial.sql` (testado no Postgres 16 com RLS) + `supabase/seed.sql` (Indaiatuba/ADS 2026/2, provisório) + `20261103000001_yara.sql` (pgvector, pgmq, pg_cron; Fase 5).
+Schema em `supabase/migrations/20261027000000_schema_inicial.sql` (testado no Postgres 16 com RLS) + `supabase/seed.sql` (Indaiatuba/ADS 2026/2, provisório) + `20261103000001_archie.sql` (pgvector, pgmq, pg_cron) + `20261116000000_archie_v1.sql` (Fase 5: `fontes.extrator`, `capturas`, curadoria aplicável, `archie_status`, view `ultimas_capturas`).
 
 Tabelas: `tenants`, `cursos`, `perfis` (papel, curso, semestre, turno, onboarding), `disciplinas` (cor), `turmas` (`tamanho_real`, `professor_id`), `matriculas`, `aulas_horario`, `eventos` (escopo unidade/curso/turma/pessoal, origem, status, cancelado, rrule, lembretes), `evento_override`, `agenda_preferencias` (camadas ocultas, `ics_token`), `materiais` (R2, `na_entrada`, `oficial`), `tarefas`, `revisao_itens` (SM-2), `avaliacoes`, `notas`, `frequencia`, `mensagens` (canal `avisos` só professor), `duvidas`, `respostas`, `propostas`, `votos`, `reacoes`, `fontes`, `capturas`, `curadoria`, `notificacoes`, `auditoria`. View `pessoas` (nome e papel sem e-mail).
 
-Funções: `criar_perfil` (trigger em auth.users, recusa domínio fora do tenant), `dominio_permitido`, `concluir_onboarding`, `quorum_da_turma`, `avaliar_proposta` (trigger nos votos), `aplicar_proposta` (cria/muda/cancela o evento), `fechar_proposta` (professor/admin), `expirar_propostas` (pg_cron).
+Funções: `criar_perfil` (trigger em auth.users, recusa domínio fora do tenant), `dominio_permitido`, `concluir_onboarding`, `quorum_da_turma`, `avaliar_proposta` (trigger nos votos), `aplicar_proposta` (cria/muda/cancela o evento), `fechar_proposta` (professor/admin), `expirar_propostas` (pg_cron). Archie: `aplicar_curadoria` (interna, usada pelo worker), `decidir_curadoria` (admin), `archie_pedir_coleta` (admin → fila), `avisar_mudanca_evento`. **Funções internas têm `revoke execute` de anon/authenticated** (o Postgres dá EXECUTE a todos por padrão) — fazer o mesmo em toda função security definer nova.
 
 RLS: pessoal por `auth.uid()`; turma por `esta_na_turma()` (matrícula ou professor da turma); tudo no tenant; escrita da estrutura só admin; papel do próprio perfil não muda.
 
@@ -132,8 +134,8 @@ Antes de concluir qualquer tarefa: `npm run lint && npm run build`.
 - [x] **Fase 2 · Supabase e contas** — schema novo com RLS, cadastro por código (OTP) com domínio do tenant, seed Indaiatuba/ADS, onboarding por turma. *Falta: o Lucas aplicar no Supabase.*
 - [x] **Fase 3 · Espaço pessoal** — agenda Outlook (dia, semana útil, semana, mês, lista; cartão; frase; arrastar; camadas; atalhos; .ics), Hoje com dados, matérias/materiais (upload R2), caixa de entrada, tarefas Kanban, revisão espaçada, notas e faltas (Fui/Faltei). *Falta: publicar as Edge Functions do R2 e do .ics.*
 - [x] **Fase 4 · Comunidade** — turma (conversa com canais e Realtime, mural do professor, materiais, dúvidas, confirmações com votos visíveis, membros, entrar em outras turmas), reações com "ver quem", curso e unidade, admin (visão, fontes, curadoria, contas e pedidos de professor, turmas/vagas/professor, servidor), layout de celular.
-- [ ] **Fase 5 · Yara v1** — coletor + calendário acadêmico + grade de horários + avisos em imagem.
-- [ ] **Fase 6 · Yara v2** — caixa de entrada, plano de ensino, SIGA, RAG, resumo diário.
+- [x] **Fase 5 · Archie v1** — `workers/archie`: coletor (robots.txt, 5 s por pedido, hash por documento), calendário (IA com JSON), grade de horários (leitura pela posição do texto, IA por imagem de reserva), avisos em imagem (visão), base de conhecimento com embeddings; publicação por confiança com curadoria; admin com curadoria do Archie, "Verificar agora" e status do worker. 22 testes (pytest, Postgres 16). *Falta: ligar extensões + migração, Ollama e o `.env` do worker (`docs/archie.md`); pedir à TI para liberar o coletor se o site responder 403.*
+- [ ] **Fase 6 · Archie v2** — caixa de entrada, plano de ensino, SIGA, RAG, resumo diário.
 - [ ] **Fase 7 · Painel admin** — básico já existe; falta auditoria/LGPD e estatísticas do piloto.
 - [ ] **Fase 8 · PWA, deploy, piloto.**
 - [ ] **Fase 9 · Avaliação para o PTG.**

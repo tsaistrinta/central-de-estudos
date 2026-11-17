@@ -171,7 +171,7 @@ export default function Agenda() {
           (resumo.canceladas > 0 || resumo.propostas > 0 || sugestoes > 0) && (
             <div className="mt-auto flex flex-col gap-1.5 rounded-lg border border-border bg-background p-3">
               <span className="flex items-center gap-1.5 text-[12.5px] font-semibold">
-                <Sparkles size={14} strokeWidth={1.9} className="text-primary" /> Yara neste período
+                <Sparkles size={14} strokeWidth={1.9} className="text-primary" /> Archie neste período
               </span>
               <p className="text-xs leading-relaxed text-muted-foreground">
                 {[

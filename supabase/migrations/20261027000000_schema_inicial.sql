@@ -1,6 +1,6 @@
--- Central de Estudos — schema da nova direção (Fatec + Yara), Fases 2 a 4.
+-- Central de Estudos — schema da nova direção (Fatec + Archie), Fases 2 a 4.
 -- Substitui o schema do app pessoal antigo. Rodar num banco LIMPO (veja docs/setup-supabase.md).
--- A parte da Yara (pgvector, fila) fica em 20261103000001_yara.sql.
+-- A parte do Archie (pgvector, fila) fica em 20261103000001_archie.sql.
 --
 -- Segurança em camadas:
 --   1. Cadastro só com e-mail de domínio permitido do tenant (trigger em auth.users).
@@ -152,7 +152,7 @@ create view public.pessoas with (security_barrier) as
   select id, nome, papel from public.perfis where tenant_id = public.meu_tenant();
 grant select on public.pessoas to authenticated;
 
--- ===================== Fontes da Yara =====================
+-- ===================== Fontes do Archie =====================
 create table public.fontes (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid not null references public.tenants on delete cascade,
@@ -202,7 +202,7 @@ create table public.eventos (
   descricao text,
   rrule text,                            -- RFC 5545, ex.: FREQ=WEEKLY;BYDAY=SA;UNTIL=20261121
   lembretes int[],                       -- minutos antes; null = padrão do tipo
-  origem text not null default 'manual' check (origem in ('manual', 'yara', 'professor', 'turma', 'importado')),
+  origem text not null default 'manual' check (origem in ('manual', 'archie', 'professor', 'turma', 'importado')),
   fonte_id uuid references public.fontes on delete set null,
   documento_url text,
   confianca numeric(3, 2),
@@ -227,7 +227,7 @@ end $$;
 create trigger eventos_padrao before insert on public.eventos
   for each row execute function public.eventos_padrao();
 
--- Versão do aluno de um evento oficial (nunca sobrescrita pela Yara).
+-- Versão do aluno de um evento oficial (nunca sobrescrita pelo Archie).
 create table public.evento_override (
   usuario_id uuid not null default auth.uid() references public.perfis on delete cascade,
   evento_id uuid not null references public.eventos on delete cascade,
@@ -354,7 +354,7 @@ create table public.duvidas (
 create table public.respostas (
   id uuid primary key default gen_random_uuid(),
   duvida_id uuid not null references public.duvidas on delete cascade,
-  autor_id uuid default auth.uid() references public.perfis on delete cascade,   -- null = Yara
+  autor_id uuid default auth.uid() references public.perfis on delete cascade,   -- null = Archie
   texto text not null,
   fontes jsonb not null default '[]',
   confirmada_por uuid references public.perfis on delete set null,
@@ -369,7 +369,7 @@ create table public.propostas (
   alvo_evento_id uuid references public.eventos on delete cascade,
   titulo text not null,
   dados jsonb not null default '{}',     -- novo_evento/mudar_data: {titulo, tipo, inicio, fim, local}
-  origem text not null default 'turma' check (origem in ('turma', 'yara')),
+  origem text not null default 'turma' check (origem in ('turma', 'archie')),
   trecho_origem text,
   status public.status_info not null default 'nao_confirmado',
   criado_por uuid default auth.uid() references public.perfis on delete set null,

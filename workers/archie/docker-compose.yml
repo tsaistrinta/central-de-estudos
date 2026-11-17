@@ -1,0 +1,11 @@
+# Sobe só o worker; o Ollama roda direto no PC (usa a GPU sem configuração extra).
+#   docker compose up -d --build      docker compose logs -f archie
+services:
+  archie:
+    build: .
+    env_file: .env
+    environment:
+      OLLAMA_URL: ${OLLAMA_URL_DOCKER:-http://host.docker.internal:11434}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # no Linux, aponta para o PC
+    restart: unless-stopped

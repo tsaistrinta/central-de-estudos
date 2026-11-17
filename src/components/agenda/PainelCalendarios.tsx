@@ -9,7 +9,7 @@ import type { MinhaTurma } from '@/types'
 
 export type Camada = { id: string; nome: string; cor: string; oficial?: boolean; contador?: number }
 
-const MEUS: Camada[] = (['pessoal', 'trabalho', 'yara'] as const).map((id) => ({ id, ...CAMADAS_FIXAS[id] }))
+const MEUS: Camada[] = (['pessoal', 'trabalho', 'archie'] as const).map((id) => ({ id, ...CAMADAS_FIXAS[id] }))
 const FATEC: Camada[] = [
   { id: 'academico', ...CAMADAS_FIXAS.academico, oficial: true },
   { id: 'curso', ...CAMADAS_FIXAS.curso },
@@ -72,7 +72,7 @@ export default function PainelCalendarios({ foco, onEscolherDia, onNovoEvento, t
 
       <Grupo titulo="Meus calendários" acao>
         {MEUS.map((c) => (
-          <ItemCamada key={c.id} camada={c.id === 'yara' ? { ...c, contador: sugestoes } : c} ligada={ligada(c.id)} onAlternar={() => onAlternar(c.id)} />
+          <ItemCamada key={c.id} camada={c.id === 'archie' ? { ...c, contador: sugestoes } : c} ligada={ligada(c.id)} onAlternar={() => onAlternar(c.id)} />
         ))}
       </Grupo>
 

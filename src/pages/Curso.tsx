@@ -17,7 +17,7 @@ export default function Curso() {
         <EventosOficiais escopo="curso" titulo="Datas do curso" />
         <Cartao titulo="De onde vem">
           <p className="px-4 pb-4 text-[13px] leading-relaxed text-muted-foreground">
-            Horários, PTG, estágio, AACC e comunicados vêm das páginas que a coordenação já publica no site. Ninguém precisa digitar nada: a Yara confere de hora em hora e avisa só quem foi afetado.
+            Horários, PTG, estágio, AACC e comunicados vêm das páginas que a coordenação já publica no site. Ninguém precisa digitar nada: o Archie confere de hora em hora e avisa só quem foi afetado.
           </p>
         </Cartao>
       </div>

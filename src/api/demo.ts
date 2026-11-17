@@ -13,6 +13,7 @@ import type {
   Evento,
   Fonte,
   Frequencia,
+  ItemCuradoria,
   ItemRevisao,
   Material,
   Mensagem,
@@ -26,6 +27,8 @@ import type {
   Tenant,
   Turma,
   Voto,
+  UltimaCaptura,
+  ArchieStatus,
 } from '@/types'
 
 export const DEMO_ID = 'demo-lucas'
@@ -38,6 +41,9 @@ function quando(diaDaSemana: number, hora: string, semanas = 0) {
   d.setHours(h, m, 0, 0)
   return d.toISOString()
 }
+
+/** Há n minutos (para as visitas do Archie parecerem recentes). */
+const haMin = (n: number) => new Date(Date.now() - n * 60_000).toISOString()
 
 let seq = 0
 export function novoId(prefixo = 'demo') {
@@ -130,15 +136,15 @@ const eventos: Evento[] = [
   ev({ id: 'e-revisar', titulo: 'Revisar POO', tipo: 'leitura', disciplina_id: 'd-poo', inicio: quando(0, '14:00'), fim: quando(0, '16:00'), descricao: 'Plano até a P1 · 2 de 4' }),
   ev({ id: 'e-churras', titulo: 'Churrasco da turma', inicio: quando(6, '15:00'), fim: quando(6, '18:00'), local: 'Casa do Rafael' }),
   ev({ id: 'e-trabalho', titulo: 'Trabalho', origem: 'importado', inicio: quando(1, '08:00'), fim: quando(1, '17:00'), rrule: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR' }),
-  ev({ id: 'e-sug', titulo: 'Estudar Estatística', tipo: 'leitura', disciplina_id: 'd-est', origem: 'yara', status: 'provavel', inicio: quando(6, '10:00'), fim: quando(6, '12:00'), descricao: 'Sugestão da Yara · 2 h livres antes da P1' }),
+  ev({ id: 'e-sug', titulo: 'Estudar Estatística', tipo: 'leitura', disciplina_id: 'd-est', origem: 'archie', status: 'provavel', inicio: quando(6, '10:00'), fim: quando(6, '12:00'), descricao: 'Sugestão do Archie · 2 h livres antes da P1' }),
   // Turma
   ev({ id: 'e-p1poo', escopo: 'turma', escopo_id: 't-poo', disciplina_id: 'd-poo', titulo: 'P1 · POO', tipo: 'prova', origem: 'professor', inicio: quando(2, '19:00', 1), fim: quando(2, '20:40', 1), local: 'Sala 7', descricao: 'Classes, herança e polimorfismo · vale 40% da média' }),
   ev({ id: 'e-lista3', escopo: 'turma', escopo_id: 't-est', disciplina_id: 'd-est', titulo: 'Lista 3 · Estatística', tipo: 'entrega', origem: 'turma', status: 'confirmado_turma', inicio: quando(5, '23:59'), dia_todo: true }),
-  ev({ id: 'e-ihc-canc', escopo: 'turma', escopo_id: 't-ihc', disciplina_id: 'd-ihc', titulo: 'IHC · aula cancelada', tipo: 'aula', origem: 'yara', cancelado: true, inicio: quando(5, '19:00'), fim: quando(5, '20:40'), documento_url: 'https://www.fatecid.com.br/site/' }),
+  ev({ id: 'e-ihc-canc', escopo: 'turma', escopo_id: 't-ihc', disciplina_id: 'd-ihc', titulo: 'IHC · aula cancelada', tipo: 'aula', origem: 'archie', cancelado: true, inicio: quando(5, '19:00'), fim: quando(5, '20:40'), documento_url: 'https://www.fatecid.com.br/site/' }),
   ev({ id: 'e-sprint', escopo: 'turma', escopo_id: 't-es2', disciplina_id: 'd-es2', titulo: 'Entrega · Sprint 2', tipo: 'entrega', origem: 'professor', inicio: quando(2, '20:50', 2), fim: quando(2, '22:30', 2), descricao: 'Apresentação em grupo · 10 min' }),
   // Fatec
-  ev({ id: 'e-monitoria', escopo: 'unidade', escopo_id: null, titulo: 'Inscrições Monitoria 2027/1', tipo: 'data_especial', origem: 'yara', dia_todo: true, inicio: quando(1, '00:00'), fim: quando(5, '23:59'), documento_url: 'https://www.fatecid.com.br/site/editais/' }),
-  ev({ id: 'e-aacc', escopo: 'curso', escopo_id: CURSO, titulo: 'Prazo AACC', tipo: 'entrega', origem: 'yara', dia_todo: true, inicio: quando(4, '00:00') }),
+  ev({ id: 'e-monitoria', escopo: 'unidade', escopo_id: null, titulo: 'Inscrições Monitoria 2027/1', tipo: 'data_especial', origem: 'archie', dia_todo: true, inicio: quando(1, '00:00'), fim: quando(5, '23:59'), documento_url: 'https://www.fatecid.com.br/site/editais/' }),
+  ev({ id: 'e-aacc', escopo: 'curso', escopo_id: CURSO, titulo: 'Prazo AACC', tipo: 'entrega', origem: 'archie', dia_todo: true, inicio: quando(4, '00:00') }),
   ev({ id: 'e-feriado', escopo: 'unidade', escopo_id: null, titulo: 'Feriado · Consciência Negra', tipo: 'data_especial', origem: 'importado', dia_todo: true, inicio: '2026-11-20T03:00:00.000Z', documento_url: 'https://www.fatecid.com.br/site/calendario-academico/' }),
 ]
 
@@ -149,7 +155,7 @@ const propostas: Proposta[] = [
     tipo: 'novo_evento',
     titulo: 'A P1 de Estatística vai ser na quinta, 19:00?',
     dados: { titulo: 'P1 · Estatística', tipo: 'prova', inicio: quando(4, '19:00', 1), fim: quando(4, '20:40', 1), local: 'Sala 12' },
-    origem: 'yara',
+    origem: 'archie',
     trecho_origem: '“o carlos falou na aula que a P1 vai pra quinta, mesmo horário”',
     status: 'nao_confirmado',
     criado_por: 'p3',
@@ -234,10 +240,29 @@ const frequencia: Frequencia[] = [
 ]
 
 const fontes: Fonte[] = [
-  { id: 'f1', tenant_id: TENANT, nome: 'Home do site', url: 'https://www.fatecid.com.br/site/', tipo: 'pagina', frequencia_min: 30, status: 'ativa' },
-  { id: 'f2', tenant_id: TENANT, nome: 'Calendário Acadêmico', url: 'https://www.fatecid.com.br/site/calendario-academico/', tipo: 'pdf', frequencia_min: 60, status: 'ativa' },
-  { id: 'f3', tenant_id: TENANT, nome: 'Grade de Horários e Salas', url: 'https://www.fatecid.com.br/site/grade-de-horarios-e-salas/', tipo: 'pagina', frequencia_min: 60, status: 'ativa' },
-  { id: 'f4', tenant_id: TENANT, nome: 'Editais', url: 'https://www.fatecid.com.br/site/editais/', tipo: 'pagina', frequencia_min: 120, status: 'ativa' },
+  { id: 'f1', tenant_id: TENANT, nome: 'Home do site (avisos)', url: 'https://www.fatecid.com.br/site/', tipo: 'pagina', extrator: 'avisos', frequencia_min: 60, status: 'ativa', ultima_verificacao: haMin(25) },
+  { id: 'f2', tenant_id: TENANT, nome: 'Calendário Acadêmico', url: 'https://www.fatecid.com.br/site/index.php/calendario-academico/', tipo: 'pagina', extrator: 'calendario', frequencia_min: 120, status: 'ativa', ultima_verificacao: haMin(55) },
+  { id: 'f3', tenant_id: TENANT, nome: 'Grade de Horários e Salas', url: 'https://www.fatecid.com.br/site/index.php/grade-de-horarios-e-salas/', tipo: 'pagina', extrator: 'grade', frequencia_min: 120, status: 'ativa', ultima_verificacao: haMin(53) },
+  { id: 'f4', tenant_id: TENANT, nome: 'Editais', url: 'https://www.fatecid.com.br/site/index.php/editais/', tipo: 'pagina', extrator: 'geral', frequencia_min: 360, status: 'erro', ultimo_erro: 'o site recusou o acesso (403). Peça à TI da unidade para liberar o coletor.', ultima_verificacao: haMin(140) },
+]
+
+const capturas: UltimaCaptura[] = [
+  { fonte_id: 'f1', titulo: 'Comunicado importante', itens: 0, capturado_em: haMin(60 * 20) },
+  { fonte_id: 'f2', titulo: 'UN-12_03_26_Calendario-Academico-2026_retificado-sem-logo-2.pdf', itens: 41, capturado_em: haMin(60 * 50) },
+  { fonte_id: 'f3', titulo: 'ADS_NOT.pdf', itens: 34, capturado_em: haMin(60 * 50 - 2) },
+]
+
+const curadoria: ItemCuradoria[] = [
+  { id: 'c1', item_tipo: 'evento_mudanca', item_id: 'e-cn', fonte_id: 'f2', confianca: 0.7, motivo: 'confiança abaixo do limite', resumo: 'Feriado · Consciência Negra: termina em 21/11', dados: { trecho: '20 e 21 Não haverá aula – feriado e emenda – Dia da Consciência Negra', documento_url: 'https://www.fatecid.com.br/site/wp-content/uploads/2026/08/UN-12_03_26_Calendario-Academico-2026_retificado-sem-logo-2.pdf' }, criado_em: haMin(60 * 50 - 1) },
+  { id: 'c2', item_tipo: 'disciplina_nova', fonte_id: 'f3', confianca: 0.95, motivo: 'estrutura nova: confira o nome antes de aprovar', resumo: 'Disciplina nova: G.G.T.I. (3º sem.) · ter 19:00–20:40 (Lab. 13); qua 20:50–22:30 (Lab. 13)', dados: { nome_no_pdf: 'G.G.T.I.', professor_nome: 'Michel', documento_url: 'https://www.fatecid.com.br/site/wp-content/uploads/2026/08/ADS_NOT.pdf' }, criado_em: haMin(60 * 50 - 2) },
+  { id: 'c3', item_tipo: 'disciplina_nova', fonte_id: 'f3', confianca: 0.95, motivo: 'estrutura nova: confira o nome antes de aprovar', resumo: 'Disciplina nova: Economia e Finanças (3º sem.) · seg 20:50–22:30 (Sala 9)', dados: { nome_no_pdf: 'ECONOMIA E FINANÇAS', professor_nome: 'Reinaldo', documento_url: 'https://www.fatecid.com.br/site/wp-content/uploads/2026/08/ADS_NOT.pdf' }, criado_em: haMin(60 * 50 - 2) },
+  { id: 'c4', item_tipo: 'evento_sumiu', item_id: 'e-rev', fonte_id: 'f2', confianca: 0.5, motivo: 'não está na nova versão do documento', resumo: 'Não aparece mais: Revisão de médias · 15/12', dados: {}, criado_em: haMin(60 * 50 - 1) },
+  { id: 'c5', item_tipo: 'grade_turma', item_id: 't-poo', fonte_id: 'f3', confianca: 0.95, resumo: 'Horário de Programação Orientada a Objetos: sex 19:00–22:30 (Lab. 1 / Lab. 3 / Lab. 4)', decisao: 'aprovado', decidido_em: haMin(60 * 50 - 2), dados: { professor_nome: 'Sérgio Furgeri', aulas: [{ dia_semana: 5, inicio: '19:00', fim: '22:30', sala: 'Lab. 1 / Lab. 3 / Lab. 4' }], antes: { aulas: [{ dia_semana: 1, inicio: '19:00', fim: '20:40', sala: 'Sala 7' }, { dia_semana: 2, inicio: '19:00', fim: '20:40', sala: 'Sala 7' }], professor_nome: 'Prof. Furgeri' }, documento_url: 'https://www.fatecid.com.br/site/wp-content/uploads/2026/08/ADS_NOT.pdf' }, criado_em: haMin(60 * 50 - 2) },
+  { id: 'c6', item_tipo: 'evento_novo', fonte_id: 'f2', confianca: 0.95, resumo: 'Sem aula · Dia do Professor · 15/10', decisao: 'aprovado', decidido_em: haMin(60 * 50 - 1), dados: { trecho: '15 Não haverá aula - Dia do Professor (Decreto Federal nº 52.682/1963)' }, criado_em: haMin(60 * 50 - 1) },
+]
+
+const archieStatus: ArchieStatus[] = [
+  { worker: 'pc-do-lucas', versao: '0.1.0', modelos: { texto_imagem: 'qwen3.5:9b', embedding: 'qwen3-embedding:0.6b' }, iniciado_em: haMin(60 * 23), ultimo_sinal: new Date(Date.now() - 40_000).toISOString(), tarefa_atual: null, processadas: 37, erros: 2, ultimo_erro: 'Editais: o site recusou o acesso (403).' },
 ]
 
 const preferencias: AgendaPreferencias = {
@@ -276,6 +301,9 @@ export const demo = {
   notas,
   frequencia,
   fontes,
+  capturas,
+  curadoria,
+  archieStatus,
   preferencias,
 }
 

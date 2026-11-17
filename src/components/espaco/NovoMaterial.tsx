@@ -128,7 +128,7 @@ export default function NovoMaterial({ turmas, disciplinaId, entrada, compartilh
           )}
           {!disciplinaId && (
             <div className="space-y-1.5">
-              <Label htmlFor="mt-disc">Matéria{entrada ? ' (opcional, a Yara sugere depois)' : ''}</Label>
+              <Label htmlFor="mt-disc">Matéria{entrada ? ' (opcional, o Archie sugere depois)' : ''}</Label>
               <select id="mt-disc" value={disc} onChange={(e) => setDisc(e.target.value)} className="h-9 w-full rounded-md border border-border bg-card px-2.5 text-sm">
                 <option value="">{entrada ? 'Deixar na caixa de entrada' : 'Sem matéria'}</option>
                 {turmas.map((t) => (

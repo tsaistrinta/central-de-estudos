@@ -31,7 +31,7 @@ export const corDaMateria = (cor: CorMateria) => `var(--subject-${cor})`
 export const CAMADAS_FIXAS = {
   pessoal: { nome: 'Pessoal', cor: 'var(--subject-verde)' },
   trabalho: { nome: 'Trabalho', cor: 'var(--faint)' },
-  yara: { nome: 'Sugestões da Yara', cor: 'var(--primary)' },
+  archie: { nome: 'Sugestões do Archie', cor: 'var(--primary)' },
   academico: { nome: 'Calendário acadêmico', cor: 'var(--subject-azul)' },
   curso: { nome: 'Meu curso', cor: 'var(--muted-foreground)' },
 } as const
@@ -39,13 +39,16 @@ export const CAMADAS_FIXAS = {
 export function camadaDoEvento(e: Evento): string {
   if (e.escopo === 'pessoal') {
     if (e.origem === 'importado') return 'trabalho'
-    if (e.origem === 'yara' && e.status === 'provavel') return 'yara'
+    if (e.origem === 'archie' && e.status === 'provavel') return 'archie'
     return 'pessoal'
   }
   if (e.escopo === 'turma') return `turma:${e.escopo_id}`
   if (e.escopo === 'curso') return 'curso'
   return 'academico'
 }
+
+/** Títulos que o Archie usa para dia sem aula (feriado, emenda, recesso, "Sem aula · …", dia não letivo). */
+export const DIA_SEM_AULA = /feriado|recesso|sem aula|n[ãa]o letivo|emenda/i
 
 const DIAS_RRULE: Record<string, number> = { SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6 }
 
@@ -94,13 +97,13 @@ export function montarItens({ de, ate, eventos, aulas, turmas, propostas, tenant
   const turmaPorId = new Map(turmas.map((t) => [t.id, t]))
   const itens: ItemAgenda[] = []
 
-  // Dias sem aula: feriados da unidade e aulas canceladas de cada turma.
+  // Dias sem aula: feriados/dias não letivos da unidade e aulas canceladas de cada turma.
   const feriados = new Set<string>()
   const canceladas = new Set<string>()
   const ocupaAula = new Map<string, [number, number][]>()
   for (const e of eventos) {
     const dia = chaveDia(new Date(e.inicio))
-    if (e.escopo === 'unidade' && e.dia_todo && /feriado|recesso/i.test(e.titulo)) {
+    if (e.escopo === 'unidade' && e.dia_todo && !e.cancelado && e.status !== 'descartado' && DIA_SEM_AULA.test(e.titulo)) {
       const fim = new Date(e.fim ?? e.inicio)
       for (let d = inicioDoDia(new Date(e.inicio)); d <= fim; d = somarDias(d, 1)) feriados.add(chaveDia(d))
     }
@@ -129,7 +132,7 @@ export function montarItens({ de, ate, eventos, aulas, turmas, propostas, tenant
         ? 'cancelado'
         : camada === 'trabalho'
           ? 'ocupado'
-          : camada === 'yara'
+          : camada === 'archie'
             ? 'sugestao'
             : e.tipo === 'prova'
               ? 'prova'

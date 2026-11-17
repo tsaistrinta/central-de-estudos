@@ -11,6 +11,14 @@ dist-ssr/
 .env.local
 .env.*.local
 
+# Worker do Archie (Python)
+workers/archie/.env
+**/__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+*.egg-info/
+
 # Supabase
 supabase/.branches
 supabase/.temp

@@ -35,7 +35,7 @@ No **SQL Editor**, rode nesta ordem (cole o arquivo inteiro e clique em *Run*):
 Confira em **Table Editor** se `tenants`, `turmas`, `eventos`, `propostas`, `votos` aparecem com o cadeado de RLS.
 
 > O seed tem as disciplinas e horários do **3º semestre noite** marcados como PROVISÓRIOS. Antes do piloto,
-> ajuste nomes, professores, salas e horários pela grade do site (ou deixe para a Yara na Fase 5).
+> ajuste nomes, professores, salas e horários pela grade do site (ou deixe para o Archie na Fase 5).
 
 ## 3. Código de 6 dígitos no e-mail
 
@@ -106,7 +106,7 @@ Recarregue o app: aparece **Administração** na barra lateral (contas, turmas, 
 select cron.schedule('expirar-propostas', '*/15 * * * *', $$select public.expirar_propostas()$$);
 ```
 
-(O arquivo `20261103000001_yara.sql` faz isso junto com a parte da Yara; só rode ele na Fase 5, depois de ligar `vector` e `pgmq`.)
+(O arquivo `20261103000001_archie.sql` faz isso junto com a parte do Archie. Para ligar o Archie — extensões, as duas migrações dele, Ollama e o worker — siga `docs/archie.md`.)
 
 ## 9. Keep-alive
 

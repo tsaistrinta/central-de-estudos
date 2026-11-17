@@ -250,7 +250,7 @@ export default function BoasVindas() {
               ))}
               {!turmas.isLoading && doSemestre.length === 0 && (
                 <p className="rounded-md border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
-                  Ainda não há turmas do {semestre}º semestre nesse turno. A Yara cadastra quando ler a grade do site; você pode
+                  Ainda não há turmas do {semestre}º semestre nesse turno. O Archie cadastra quando ler a grade do site; você pode
                   concluir agora e entrar nas turmas depois.
                 </p>
               )}

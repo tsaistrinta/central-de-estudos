@@ -1,6 +1,6 @@
 # Arquitetura — Central de Estudos
 
-Híbrida: o app, o banco e os arquivos ficam na nuvem (acesso de qualquer lugar); a IA local (Yara) roda num PC com GPU e só faz conexões de saída.
+Híbrida: o app, o banco e os arquivos ficam na nuvem (acesso de qualquer lugar); a IA local (Archie) roda num PC com GPU e só faz conexões de saída.
 
 ```mermaid
 flowchart LR
@@ -12,7 +12,7 @@ flowchart LR
     SB -->|"código de 6 dígitos"| RS["Resend (SMTP)"]
     OUT["Outlook · Google · iPhone"] -->|"assina o .ics"| EF
     subgraph PC["PC do Lucas (depois: servidor da Fatec)"]
-      Y["Worker Yara<br/>Python + Ollama (Qwen3.5)"]
+      Y["Worker Archie<br/>Python + Ollama (Qwen3.5)"]
     end
     Y -->|"puxa tarefas da fila (pgmq) · grava eventos"| SB
     Y -->|"lê páginas e PDFs públicos"| SITE["fatecid.com.br"]
@@ -27,7 +27,7 @@ flowchart LR
 | `src/api/*` | Única camada que fala com o Supabase. Cada função tem a versão demonstração (`demo.ts`). |
 | `supabase/migrations` | Schema, RLS e regras (domínio do e-mail, validação coletiva, aplicação das propostas). |
 | `supabase/functions` | URLs assinadas do R2 e o feed `.ics` pessoal. |
-| `workers/yara` (Fase 5) | Coletor + extração com IA local. Se parar, o app continua; as tarefas esperam na fila. |
+| `workers/archie` (Fase 5) | Coletor + extração (grade pela posição do texto; calendário e avisos com IA local) + publicação por confiança com curadoria. Se parar, o app continua; as tarefas esperam na fila. Veja `docs/archie.md`. |
 
 ## Segurança
 

@@ -10,7 +10,7 @@ import NovoMaterial from '@/components/espaco/NovoMaterial'
 import { entenderFrase } from '@/lib/frase'
 import type { Material, MinhaTurma } from '@/types'
 
-// Tela 04 · Caixa de entrada: joga aqui sem pensar; depois escolhe a matéria (a Yara sugere na Fase 6).
+// Tela 04 · Caixa de entrada: joga aqui sem pensar; depois escolhe a matéria (o Archie sugere na Fase 6).
 function Classificar({ m, turmas }: { m: Material; turmas: MinhaTurma[] }) {
   const qc = useQueryClient()
   const sugestao = entenderFrase(`${m.titulo} ${m.conteudo ?? ''}`, turmas.map((t) => t.disciplina)).disciplinaId

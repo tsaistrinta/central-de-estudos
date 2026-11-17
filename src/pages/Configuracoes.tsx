@@ -128,7 +128,7 @@ function Agenda() {
         <div className="px-4 pb-3">
           {p && (
             <>
-              <Interruptor ligado={p.mostrar_sugestoes} onMudar={(v) => mudar.mutate({ mostrar_sugestoes: v })} titulo="Sugestões da Yara para estudar" descricao="Blocos listrados nos horários livres antes das provas" />
+              <Interruptor ligado={p.mostrar_sugestoes} onMudar={(v) => mudar.mutate({ mostrar_sugestoes: v })} titulo="Sugestões do Archie para estudar" descricao="Blocos listrados nos horários livres antes das provas" />
               <Interruptor ligado={p.mostrar_propostas} onMudar={(v) => mudar.mutate({ mostrar_propostas: v })} titulo="Mostrar propostas não confirmadas" descricao="Com borda tracejada até a turma confirmar" />
               <div className="flex items-center gap-3 py-2.5">
                 <span className="flex-1 text-[13.5px] font-medium">Começar o dia às</span>

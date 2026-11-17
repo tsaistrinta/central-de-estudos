@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { CalendarDays, Inbox, MapPin, Sparkles } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { useAgora } from '@/lib/useAgora'
-import { EtiquetaEvento, SeloStatus, SeloYara } from '@/components/foco/Selos'
+import { EtiquetaEvento, SeloStatus, SeloArchie } from '@/components/foco/Selos'
 import { Cartao, Esqueleto, PontoMateria, Vazio } from '@/components/foco/Base'
 import { useDadosAgenda } from '@/components/agenda/useDadosAgenda'
 import { listarPropostas, votosDe } from '@/api/comunidade'
@@ -40,7 +40,7 @@ export default function Hoje() {
     .filter((i) => (i.estilo === 'prova' || i.estilo === 'entrega' || i.tipo === 'proposta') && i.fim >= agora)
     .sort((a, b) => a.inicio.getTime() - b.inicio.getTime())
     .slice(0, 5)
-  const mudancas = itens.filter((i) => i.evento && (i.evento.origem === 'yara' || i.evento.status === 'confirmado_turma' || i.estilo === 'cancelado') && i.inicio < somarDias(hoje, 8))
+  const mudancas = itens.filter((i) => i.evento && (i.evento.origem === 'archie' || i.evento.status === 'confirmado_turma' || i.estilo === 'cancelado') && i.inicio < somarDias(hoje, 8))
   const eu = meuIdSincrono()
   const semVoto = (propostas.data ?? []).filter((p) => !(votos.data ?? []).some((v) => v.proposta_id === p.id && v.usuario_id === eu))
   const fimSemana = somarDias(hoje, 7).toISOString().slice(0, 10)
@@ -74,7 +74,7 @@ export default function Hoje() {
         <div className="flex items-center gap-2">
           <Sparkles size={16} strokeWidth={1.9} className="text-primary" />
           <h2 className="text-[15px] font-semibold">Resumo do dia</h2>
-          <SeloYara />
+          <SeloArchie />
         </div>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
           Hoje você tem <b className="text-foreground">{deHoje.filter((i) => i.tipo === 'aula').length} aula(s)</b>

@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Bell, BookOpen, Check, ExternalLink, KanbanSquare, MapPin, Pencil, RefreshCw, Sparkles, Trash2, User, Users, X } from 'lucide-react'
-import { PilulaEvento, SeloStatus, SeloYara } from '@/components/foco/Selos'
+import { PilulaEvento, SeloStatus, SeloArchie } from '@/components/foco/Selos'
 import Votacao from '@/components/comunidade/Votacao'
 import { apagarEvento } from '@/api/agenda'
 import { criarTarefa, marcarPresenca } from '@/api/espaco'
@@ -90,7 +90,7 @@ export default function CartaoEvento({ item, posicao, onFechar, onEditar, onProp
             {item.tipo === 'aula' && <PilulaEvento tipo="aula" />}
             {item.tipo === 'proposta' && <SeloStatus status="nao_confirmado" />}
             {e && e.escopo !== 'pessoal' && <SeloStatus status={e.status} />}
-            {e?.origem === 'yara' && <SeloYara rotulo={e.status === 'provavel' ? 'Sugestão da Yara' : 'Captado pela Yara'} />}
+            {e?.origem === 'archie' && <SeloArchie rotulo={e.status === 'provavel' ? 'Sugestão do Archie' : 'Captado pelo Archie'} />}
             {item.estilo === 'cancelado' && <span className="rounded-full bg-destructive-soft px-2 py-0.5 text-[11px] font-semibold text-destructive">Cancelado</span>}
           </div>
           <div className="flex text-muted-foreground">
@@ -147,7 +147,7 @@ export default function CartaoEvento({ item, posicao, onFechar, onEditar, onProp
           <>
             {item.proposta.trecho_origem && (
               <div className="rounded-md border border-border bg-background px-3 py-2 text-[12.5px] leading-relaxed">
-                <SeloYara /> leu: {item.proposta.trecho_origem}
+                <SeloArchie /> leu: {item.proposta.trecho_origem}
               </div>
             )}
             {t && <Votacao proposta={item.proposta} turma={t} compacto />}

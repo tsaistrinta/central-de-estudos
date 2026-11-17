@@ -36,8 +36,8 @@ export function SeloStatus({ status, rotulo }: { status: StatusInfo; rotulo?: st
   )
 }
 
-/** Selo cinza "Yara": o que foi captado ou sugerido pela IA. */
-export function SeloYara({ rotulo = 'Yara' }: { rotulo?: string }) {
+/** Selo cinza "Archie": o que foi captado ou sugerido pela IA. */
+export function SeloArchie({ rotulo = 'Archie' }: { rotulo?: string }) {
   return (
     <Pilula className="bg-muted text-foreground/80">
       <Sparkles size={11} strokeWidth={2} />

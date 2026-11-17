@@ -25,7 +25,7 @@ const Notas = lazy(() => import('./pages/Notas'))
 const Turma = lazy(() => import('./pages/Turma'))
 const Admin = lazy(() => import('./pages/admin/Admin'))
 
-// Rotas da nova direção (Central para a Fatec, com a Yara). Mockups: telas 01–26.
+// Rotas da nova direção (Central para a Fatec, com o Archie). Mockups: telas 01–26.
 // Sem .env.local o app roda em modo demonstração: as rotas protegidas ficam abertas.
 export default function App() {
   return (

@@ -1,5 +1,5 @@
 // "Escreva do seu jeito": entende frases como "estudar estatística sábado 10h por 2h"
-// e devolve os campos do evento. Roda no navegador, sem IA; a Yara melhora isso na Fase 6.
+// e devolve os campos do evento. Roda no navegador, sem IA; o Archie melhora isso na Fase 6.
 
 import type { TipoEvento } from './eventos'
 

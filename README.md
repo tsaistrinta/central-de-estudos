@@ -4,7 +4,7 @@
 
 # Central de Estudos
 
-**Plataforma de estudos da Fatec Indaiatuba que se alimenta sozinha, com a Yara, uma IA local.**
+**Plataforma de estudos da Fatec Indaiatuba que se alimenta sozinha, com o Archie, uma IA local.**
 
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-2f4ad0)
 ![Front-end](https://img.shields.io/badge/front--end-React%20%2B%20Vite%20%2B%20TS-61dafb)
@@ -18,14 +18,14 @@
 
 ## Sobre o projeto
 
-A **Central de Estudos** é o PTG de Análise e Desenvolvimento de Sistemas da Fatec Indaiatuba. Hoje o aluno caça informação no site, em PDFs, no e-mail e na fala do professor, e copia tudo à mão. Na Central, a **Yara** lê o que a Fatec já publica (site da unidade, calendário acadêmico, grade de horários, editais, planos de ensino) e monta sozinha a agenda, os horários, as tarefas e os avisos de cada aluno, sempre mostrando a fonte.
+A **Central de Estudos** é o PTG de Análise e Desenvolvimento de Sistemas da Fatec Indaiatuba. Hoje o aluno caça informação no site, em PDFs, no e-mail e na fala do professor, e copia tudo à mão. Na Central, o **Archie** lê o que a Fatec já publica (site da unidade, calendário acadêmico, grade de horários, editais, planos de ensino) e monta sozinha a agenda, os horários, as tarefas e os avisos de cada aluno, sempre mostrando a fonte.
 
-Secretaria e coordenação não fazem nenhum trabalho extra. Quando a Yara não tem certeza, a própria turma confirma com votos visíveis.
+Secretaria e coordenação não fazem nenhum trabalho extra. Quando o Archie não tem certeza, a própria turma confirma com votos visíveis.
 
 ## Funcionalidades
 
 - **Agenda no padrão Outlook:** dia, semana, mês e lista; camadas por disciplina e da Fatec; arrastar e redimensionar; criação por frase; link .ics para o Outlook, Google ou iPhone.
-- **Hoje:** resumo do dia da Yara, aulas, próximas provas e o que mudou.
+- **Hoje:** resumo do dia do Archie, aulas, próximas provas e o que mudou.
 - **Espaço pessoal:** matérias e materiais, caixa de entrada, tarefas (Kanban), plano de revisão até a prova, notas e faltas.
 - **Comunidade:** turma com conversa, mural, materiais, dúvidas respondidas com fonte e **validação coletiva**.
 - **Painel admin:** fontes monitoradas, curadoria da IA, contas e papéis, servidor.
@@ -83,7 +83,7 @@ central-de-estudos/
 └─ README.md
 ```
 
-Previstos: `supabase/functions` (upload no R2, hook de domínio, .ics) e `workers/yara/` (coletor + IA local).
+Previstos: `supabase/functions` (upload no R2, hook de domínio, .ics) e `workers/archie/` (coletor + IA local).
 
 ## Como rodar localmente
 
@@ -109,7 +109,7 @@ O app sobe em `http://localhost:5173`.
 
 ## Roadmap
 
-Fases 0 a 4 prontas no código (base visual, contas por código, agenda estilo Outlook, espaço pessoal, comunidade e validação coletiva). Próximas: ligar o Supabase (`docs/setup-supabase.md`) → 5–6 · Yara → 7 · painel admin → 8 · piloto com a turma → 9 · avaliação do PTG. Detalhes em `CLAUDE.md`.
+Fases 0 a 5 prontas no código (base visual, contas por código, agenda estilo Outlook, espaço pessoal, comunidade e validação coletiva, Archie v1 lendo calendário, grade de horários e avisos do site). Próximas: ligar o Supabase (`docs/setup-supabase.md`) e o Archie (`docs/archie.md`) → 6 · Archie v2 → 7 · painel admin → 8 · piloto com a turma → 9 · avaliação do PTG. Detalhes em `CLAUDE.md`.
 
 ## Autor
 

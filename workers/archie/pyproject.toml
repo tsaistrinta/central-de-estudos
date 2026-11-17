@@ -1,0 +1,26 @@
+[project]
+name = "archie"
+version = "0.1.0"
+description = "Worker do Archie, a IA local da Central de Estudos (coletor + extração + curadoria)"
+requires-python = ">=3.12"
+dependencies = [
+  "httpx>=0.28",
+  "trafilatura>=2.0",
+  "pymupdf>=1.26",
+  "psycopg[binary]>=3.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["archie*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+filterwarnings = ["ignore::DeprecationWarning", "ignore:.*SOCKS.*"]
