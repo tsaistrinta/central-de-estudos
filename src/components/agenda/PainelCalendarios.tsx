@@ -1,21 +1,18 @@
-import { useState } from 'react'
 import { Check, ChevronDown, Plus, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import MiniCalendario from './MiniCalendario'
+import { CAMADAS_FIXAS, corDaMateria } from '@/lib/agenda'
+import type { MinhaTurma } from '@/types'
 
 // Painel esquerdo da agenda (tela 20): novo evento, minicalendário e camadas que ligam/desligam.
-// As camadas reais (turmas, Fatec) vêm do banco na Fase 3; as cores seguem a paleta Foco.
+// Cada disciplina é uma camada com a cor da matéria; o que fica desligado é salvo nas preferências.
 
-export type Camada = { id: string; nome: string; cor: string; oficial?: boolean }
+export type Camada = { id: string; nome: string; cor: string; oficial?: boolean; contador?: number }
 
-const MEUS: Camada[] = [
-  { id: 'pessoal', nome: 'Pessoal', cor: 'var(--subject-verde)' },
-  { id: 'trabalho', nome: 'Trabalho', cor: 'var(--faint)' },
-  { id: 'yara', nome: 'Sugestões da Yara', cor: 'var(--primary)' },
-]
+const MEUS: Camada[] = (['pessoal', 'trabalho', 'yara'] as const).map((id) => ({ id, ...CAMADAS_FIXAS[id] }))
 const FATEC: Camada[] = [
-  { id: 'academico', nome: 'Calendário acadêmico', cor: 'var(--subject-azul)', oficial: true },
-  { id: 'curso', nome: 'Meu curso', cor: 'var(--muted-foreground)' },
+  { id: 'academico', ...CAMADAS_FIXAS.academico, oficial: true },
+  { id: 'curso', ...CAMADAS_FIXAS.curso },
 ]
 
 function ItemCamada({ camada, ligada, onAlternar }: { camada: Camada; ligada: boolean; onAlternar: () => void }) {
@@ -29,6 +26,7 @@ function ItemCamada({ camada, ligada, onAlternar }: { camada: Camada; ligada: bo
       </span>
       <span className={cn('flex-1 truncate', !ligada && 'text-muted-foreground')}>{camada.nome}</span>
       {camada.oficial && <ShieldCheck size={12} strokeWidth={2} className="text-primary" />}
+      {!!camada.contador && <span className="font-mono text-[11px] text-muted-foreground">{camada.contador}</span>}
     </button>
   )
 }
@@ -45,46 +43,57 @@ function Grupo({ titulo, acao, children }: { titulo: string; acao?: boolean; chi
   )
 }
 
-type Props = { foco: Date; onEscolherDia: (d: Date) => void; onNovoEvento: () => void }
+type Props = {
+  foco: Date
+  onEscolherDia: (d: Date) => void
+  onNovoEvento: () => void
+  turmas: MinhaTurma[]
+  ocultas: string[]
+  onAlternar: (id: string) => void
+  diasComProva: Date[]
+  sugestoes: number
+  rodape?: React.ReactNode
+}
 
-export default function PainelCalendarios({ foco, onEscolherDia, onNovoEvento }: Props) {
-  const [desligadas, setDesligadas] = useState<Set<string>>(new Set())
-  const alternar = (id: string) =>
-    setDesligadas((s) => {
-      const n = new Set(s)
-      if (n.has(id)) n.delete(id)
-      else n.add(id)
-      return n
-    })
-
+export default function PainelCalendarios({ foco, onEscolherDia, onNovoEvento, turmas, ocultas, onAlternar, diasComProva, sugestoes, rodape }: Props) {
+  const ligada = (id: string) => !ocultas.includes(id)
   return (
     <aside className="flex w-[260px] shrink-0 flex-col gap-4 overflow-y-auto border-r border-border bg-card px-3.5 pt-4 pb-3.5">
       <div className="flex h-[38px] shrink-0 overflow-hidden rounded-md bg-primary text-[13.5px] font-semibold text-primary-foreground">
-        <button onClick={onNovoEvento} className="flex flex-1 items-center gap-2 px-3.5 hover:bg-primary-hover">
+        <button onClick={onNovoEvento} className="flex flex-1 items-center gap-2 px-3.5 hover:bg-primary-hover" title="Novo evento (N)">
           <Plus size={16} strokeWidth={2.2} /> Novo evento
         </button>
-        <button className="grid w-9 place-items-center border-l border-white/30 hover:bg-primary-hover" aria-label="Mais opções">
+        <button onClick={onNovoEvento} className="grid w-9 place-items-center border-l border-white/30 hover:bg-primary-hover" aria-label="Mais opções">
           <ChevronDown size={15} strokeWidth={2} />
         </button>
       </div>
 
-      <MiniCalendario foco={foco} onEscolher={onEscolherDia} />
+      <MiniCalendario key={foco.getFullYear() * 12 + foco.getMonth()} foco={foco} onEscolher={onEscolherDia} diasComProva={diasComProva} />
 
       <Grupo titulo="Meus calendários" acao>
         {MEUS.map((c) => (
-          <ItemCamada key={c.id} camada={c} ligada={!desligadas.has(c.id)} onAlternar={() => alternar(c.id)} />
+          <ItemCamada key={c.id} camada={c.id === 'yara' ? { ...c, contador: sugestoes } : c} ligada={ligada(c.id)} onAlternar={() => onAlternar(c.id)} />
         ))}
       </Grupo>
 
       <Grupo titulo="Minhas turmas">
-        <p className="px-1 text-[12.5px] leading-snug text-faint">Cada disciplina vira uma camada com a cor da matéria.</p>
+        {turmas.length === 0 && <p className="px-1 text-[12.5px] leading-snug text-faint">Entre numa turma para ver aulas e provas aqui.</p>}
+        {turmas.map((t) => (
+          <ItemCamada
+            key={t.id}
+            camada={{ id: `turma:${t.id}`, nome: t.disciplina.nome, cor: corDaMateria(t.disciplina.cor) }}
+            ligada={ligada(`turma:${t.id}`)}
+            onAlternar={() => onAlternar(`turma:${t.id}`)}
+          />
+        ))}
       </Grupo>
 
       <Grupo titulo="Fatec">
         {FATEC.map((c) => (
-          <ItemCamada key={c.id} camada={c} ligada={!desligadas.has(c.id)} onAlternar={() => alternar(c.id)} />
+          <ItemCamada key={c.id} camada={c} ligada={ligada(c.id)} onAlternar={() => onAlternar(c.id)} />
         ))}
       </Grupo>
+      {rodape}
     </aside>
   )
 }

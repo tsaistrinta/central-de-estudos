@@ -57,7 +57,7 @@ export function EtiquetaEvento({ tipo }: { tipo: 'prova' | 'entrega' }) {
   return (
     <span
       className={cn(
-        'inline-flex h-[15px] items-center rounded-[3px] px-1 text-[9px] font-bold tracking-wider text-white',
+        'inline-flex h-[15px] shrink-0 items-center rounded-[3px] px-1 text-[9px] font-bold tracking-wider text-white',
         tipo === 'prova' ? 'bg-evento-prova' : 'bg-evento-entrega',
       )}
     >

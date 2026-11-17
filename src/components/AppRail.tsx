@@ -3,6 +3,7 @@ import ChipLogo from './ChipLogo'
 import { MenuUsuario } from './AppSidebar'
 import { COMUNIDADE, MEU_ESPACO } from '@/lib/navegacao'
 import { cn } from '@/lib/utils'
+import { useContadores } from '@/lib/useContadores'
 
 // Trilho de ícones (68 px) que substitui a sidebar na Agenda, como no Outlook (telas 20–26).
 const CURTO: Record<string, string> = {
@@ -19,7 +20,10 @@ const CURTO: Record<string, string> = {
 }
 
 export default function AppRail() {
-  const item = ({ to, icon: Icon, end, contador }: (typeof MEU_ESPACO)[number]) => (
+  const contadores = useContadores()
+  const item = ({ to, icon: Icon, end }: (typeof MEU_ESPACO)[number]) => {
+    const contador = contadores[to]
+    return (
     <NavLink
       key={to}
       to={to}
@@ -39,7 +43,8 @@ export default function AppRail() {
         </span>
       )}
     </NavLink>
-  )
+    )
+  }
 
   return (
     <aside className="fixed inset-y-0 left-0 z-20 flex w-[68px] flex-col items-center gap-[3px] border-r border-border bg-card pt-3.5 pb-3">

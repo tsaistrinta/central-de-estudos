@@ -1,48 +1,43 @@
 import { useState, type ComponentProps, type ReactNode } from 'react'
 import { CircleAlert, CircleCheck, Eye, EyeOff, Lock } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { forcaDaSenha, SENHA_MINIMA } from '@/lib/senha'
-import type { ProvedorSocial } from '@/api/auth'
 
-function LogoGoogle() {
+/** Código de 6 dígitos em caixas separadas; aceita colar o código inteiro. */
+export function CampoCodigo({ valor, onChange, autoFocus }: { valor: string; onChange: (v: string) => void; autoFocus?: boolean }) {
+  const digitos = Array.from({ length: 6 }, (_, i) => valor[i] ?? '')
+  function aoDigitar(i: number, texto: string, alvo: HTMLInputElement) {
+    const limpo = texto.replace(/\D/g, '')
+    if (limpo.length > 1) {
+      onChange(limpo.slice(0, 6))
+      return
+    }
+    const novo = digitos.slice()
+    novo[i] = limpo
+    onChange(novo.join('').slice(0, 6))
+    if (limpo && alvo.nextElementSibling instanceof HTMLInputElement) alvo.nextElementSibling.focus()
+  }
   return (
-    <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
-      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z" />
-      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z" />
-      <path fill="#FBBC05" d="M5.84 14.1A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.44.34-2.1V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84z" />
-      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15A10.6 10.6 0 0 0 12 1 11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38z" />
-    </svg>
-  )
-}
-
-function LogoMicrosoft() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true">
-      <path fill="#F25022" d="M2 2h9.5v9.5H2z" />
-      <path fill="#7FBA00" d="M12.5 2H22v9.5h-9.5z" />
-      <path fill="#00A4EF" d="M2 12.5h9.5V22H2z" />
-      <path fill="#FFB900" d="M12.5 12.5H22V22h-9.5z" />
-    </svg>
-  )
-}
-
-const provedores: Record<ProvedorSocial, { nome: string; logo: ReactNode }> = {
-  google: { nome: 'Google', logo: <LogoGoogle /> },
-  azure: { nome: 'Microsoft', logo: <LogoMicrosoft /> },
-}
-
-export function BotaoSocial({
-  provedor,
-  verbo,
-  ...props
-}: { provedor: ProvedorSocial; verbo: string } & ComponentProps<'button'>) {
-  const { nome, logo } = provedores[provedor]
-  return (
-    <Button variant="outline" className="h-10 w-full font-semibold" {...props}>
-      {logo} {verbo} com {nome}
-    </Button>
+    <div className="flex justify-between gap-2">
+      {digitos.map((d, i) => (
+        <input
+          key={i}
+          inputMode="numeric"
+          autoComplete={i === 0 ? 'one-time-code' : 'off'}
+          aria-label={`Dígito ${i + 1}`}
+          autoFocus={autoFocus && i === 0}
+          value={d}
+          maxLength={6}
+          onChange={(e) => aoDigitar(i, e.target.value, e.target)}
+          onKeyDown={(e) => {
+            const alvo = e.currentTarget
+            if (e.key === 'Backspace' && !d && alvo.previousElementSibling instanceof HTMLInputElement) alvo.previousElementSibling.focus()
+          }}
+          className="h-12 w-full min-w-0 rounded-md border border-border bg-card text-center font-mono text-xl font-semibold outline-none focus:border-primary focus:ring-[3px] focus:ring-accent"
+        />
+      ))}
+    </div>
   )
 }
 

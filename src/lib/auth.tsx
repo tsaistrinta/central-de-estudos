@@ -2,6 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import type { Session } from '@supabase/supabase-js'
 import { supabase, supabaseConfigurado } from './supabase'
 import { obterPerfil } from '../api/auth'
+import { esquecerUsuario } from '../api/base'
+import { demo } from '../api/demo'
 import type { Perfil } from '../types'
 
 type EstadoAuth = {
@@ -38,7 +40,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSessao(data.session)
       setSessaoLida(true)
     })
-    const { data } = supabase.auth.onAuthStateChange((_evento, novaSessao) => setSessao(novaSessao))
+    const { data } = supabase.auth.onAuthStateChange((_evento, novaSessao) => {
+      esquecerUsuario()
+      setSessao(novaSessao)
+    })
     return () => data.subscription.unsubscribe()
   }, [])
 
@@ -59,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [usuarioId])
 
-  const perfilAtual = usuarioId && perfil?.de === usuarioId ? perfil.dados : null
+  const perfilAtual = !supabaseConfigurado ? demo.perfil : usuarioId && perfil?.de === usuarioId ? perfil.dados : null
   const carregando = !sessaoLida || (!!usuarioId && perfil?.de !== usuarioId)
 
   const valor = useMemo(

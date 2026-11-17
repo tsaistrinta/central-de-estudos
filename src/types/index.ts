@@ -1,132 +1,257 @@
-// Tipos do schema da Central de Estudos (espelham as tabelas do Supabase/Postgres).
+// Tipos do schema da Central de Estudos (espelham supabase/migrations/20261027000000_schema_inicial.sql).
 
-export type TipoMaterial = 'arquivo' | 'link' | 'anotacao' | 'codigo'
-export type StatusRevisao = 'estudar_depois' | 'ja_revisei'
-export type TipoEvento =
-  | 'prova'
-  | 'entrega'
-  | 'trabalho'
-  | 'apresentacao'
-  | 'aula'
-  | 'reuniao'
-  | 'leitura'
-  | 'projeto'
-  | 'lembrete'
-  | 'data_especial'
-  | 'outro'
-export type CorMateria =
-  | 'cobalto'
-  | 'azul'
-  | 'petroleo'
-  | 'verde'
-  | 'mostarda'
-  | 'laranja'
-  | 'framboesa'
-  | 'roxo'
-export type Tier = 'free' | 'plus' | 'pro'
+import type { StatusInfo, TipoEvento } from '@/lib/eventos'
+
+export type { StatusInfo, TipoEvento }
+
+export type CorMateria = 'cobalto' | 'azul' | 'petroleo' | 'verde' | 'mostarda' | 'laranja' | 'framboesa' | 'roxo'
+export type Papel = 'aluno' | 'monitor' | 'representante' | 'professor' | 'admin'
+export type Turno = 'manha' | 'tarde' | 'noite'
+export type EscopoEvento = 'unidade' | 'curso' | 'turma' | 'pessoal'
+
+export interface Tenant {
+  id: string
+  nome: string
+  slug: string
+  dominios_permitidos: string[]
+  site_url?: string | null
+  periodo_atual: string
+  inicio_periodo?: string | null
+  fim_periodo?: string | null
+}
 
 export interface Perfil {
   id: string
-  nome?: string
-  avatar_url?: string
-  preferencias: Record<string, unknown>
+  tenant_id: string
+  nome: string
+  email: string
+  papel: Papel
+  quer_ser_professor: boolean
+  curso_id?: string | null
+  semestre?: number | null
+  turno?: Turno | null
   onboarding_concluido: boolean
+  preferencias: Record<string, unknown>
   criado_em: string
 }
 
-export interface PlanoUsuario {
-  usuario_id: string
-  tier: Tier
-  cota_bytes: number
-  limite_arquivo_bytes: number
-  bytes_usados: number
-  stripe_customer_id?: string
-  atualizado_em: string
+/** Nome e papel de outra pessoa do tenant (sem e-mail). */
+export interface Pessoa {
+  id: string
+  nome: string
+  papel: Papel
 }
 
 export interface Curso {
   id: string
-  usuario_id: string
+  tenant_id: string
   nome: string
-  instituicao?: string
-  ordem: number
+  sigla: string
+  semestres: number
 }
 
-export interface Semestre {
+export interface Disciplina {
   id: string
-  usuario_id: string
   curso_id: string
   nome: string
-  ordem: number
-  atual: boolean
-}
-
-export interface Materia {
-  id: string
-  usuario_id: string
-  semestre_id: string
-  nome: string
-  cor: CorMateria
-  professor?: string
-}
-
-export interface Material {
-  id: string
-  usuario_id: string
-  materia_id: string
-  tipo: TipoMaterial
-  titulo: string
-  descricao?: string
-  url?: string
-  conteudo?: string
-  linguagem?: string
-  arquivo_chave_r2?: string
-  arquivo_tamanho?: number
-  arquivo_mime?: string
-  favorito: boolean
-  status_revisao: StatusRevisao
-  ultimo_acesso?: string
-  criado_em: string
-  atualizado_em: string
-}
-
-export interface GrupoDocumento {
-  id: string
-  usuario_id: string
-  nome: string
+  sigla?: string | null
+  semestre_matriz?: number | null
   cor: CorMateria
 }
 
-export interface Documento {
+export interface Turma {
   id: string
-  usuario_id: string
-  materia_id?: string
-  grupo_id?: string
-  titulo: string
-  conteudo_json?: unknown
-  conteudo_texto?: string
-  favorito: boolean
-  anexo_chave_r2?: string
-  criado_em: string
-  editado_em: string
+  disciplina_id: string
+  periodo_letivo: string
+  turno: Turno
+  professor_nome?: string | null
+  professor_id?: string | null
+  tamanho_real?: number | null
+}
+
+/** Turma com a disciplina embutida — o formato que as telas usam. */
+export interface MinhaTurma extends Turma {
+  disciplina: Disciplina
+  papel_turma: Papel
+}
+
+export interface AulaHorario {
+  id: string
+  turma_id: string
+  dia_semana: number
+  inicio: string
+  fim: string
+  sala?: string | null
 }
 
 export interface Evento {
   id: string
-  usuario_id: string
-  materia_id?: string
+  tenant_id?: string
+  escopo: EscopoEvento
+  escopo_id?: string | null
+  disciplina_id?: string | null
   titulo: string
-  descricao?: string
-  data: string
-  hora?: string
   tipo: TipoEvento
-  concluido: boolean
-  lembrete_minutos?: number
-  lembrete_enviado_em?: string
+  inicio: string
+  fim?: string | null
+  dia_todo: boolean
+  local?: string | null
+  descricao?: string | null
+  rrule?: string | null
+  lembretes?: number[] | null
+  origem: 'manual' | 'yara' | 'professor' | 'turma' | 'importado'
+  documento_url?: string | null
+  status: StatusInfo
+  cancelado: boolean
+  criado_por?: string | null
 }
 
-export interface Etiqueta {
+export interface AgendaPreferencias {
+  usuario_id: string
+  camadas_ocultas: string[]
+  lembretes_padrao: Record<string, number[]>
+  hora_inicio: number
+  hora_fim: number
+  mostrar_sugestoes: boolean
+  mostrar_propostas: boolean
+  ics_token: string
+}
+
+export interface Material {
+  id: string
+  dono_id: string
+  turma_id?: string | null
+  disciplina_id?: string | null
+  tipo: 'arquivo' | 'link' | 'anotacao'
+  titulo: string
+  url?: string | null
+  conteudo?: string | null
+  arquivo_chave_r2?: string | null
+  arquivo_tamanho?: number | null
+  arquivo_mime?: string | null
+  semana?: number | null
+  na_entrada: boolean
+  status_revisao: 'estudar_depois' | 'ja_revisei'
+  oficial: boolean
+  criado_em: string
+}
+
+export type ColunaTarefa = 'a_fazer' | 'fazendo' | 'feito'
+
+export interface Tarefa {
   id: string
   usuario_id: string
+  titulo: string
+  descricao?: string | null
+  coluna: ColunaTarefa
+  ordem: number
+  prazo?: string | null
+  disciplina_id?: string | null
+  subtarefas: { texto: string; feita: boolean }[]
+  criado_em: string
+}
+
+export interface ItemRevisao {
+  id: string
+  usuario_id: string
+  material_id?: string | null
+  disciplina_id?: string | null
+  pergunta: string
+  resposta?: string | null
+  proxima_em: string
+  intervalo_dias: number
+  facilidade: number
+  repeticoes: number
+}
+
+export interface Avaliacao {
+  id: string
+  turma_id: string
   nome: string
+  peso: number
+  data?: string | null
+}
+
+export interface Nota {
+  usuario_id: string
+  avaliacao_id: string
+  valor: number | null
+}
+
+export interface Frequencia {
+  usuario_id: string
+  turma_id: string
+  data: string
+  presente: boolean
+  aulas: number
+}
+
+export interface Mensagem {
+  id: string
+  turma_id: string
+  canal: string
+  autor_id: string
+  texto: string
+  fixada: boolean
+  criado_em: string
+}
+
+export interface Duvida {
+  id: string
+  turma_id: string
+  autor_id: string
+  texto: string
+  resolvida: boolean
+  criado_em: string
+}
+
+export interface Resposta {
+  id: string
+  duvida_id: string
+  autor_id?: string | null
+  texto: string
+  fontes: { titulo: string; url?: string }[]
+  confirmada_por?: string | null
+  criado_em: string
+}
+
+export type TipoProposta = 'novo_evento' | 'mudar_data' | 'cancelar' | 'outro'
+
+export interface Proposta {
+  id: string
+  turma_id: string
+  tipo: TipoProposta
+  alvo_evento_id?: string | null
+  titulo: string
+  dados: { titulo?: string; tipo?: TipoEvento; inicio?: string; fim?: string; local?: string; cancelado?: boolean }
+  origem: 'turma' | 'yara'
+  trecho_origem?: string | null
+  status: StatusInfo
+  criado_por?: string | null
+  criado_em: string
+  expira_em: string
+}
+
+export interface Voto {
+  proposta_id: string
+  usuario_id: string
+  valor: 'sim' | 'nao'
+}
+
+export interface Reacao {
+  alvo_tipo: 'mensagem' | 'material' | 'resposta' | 'duvida'
+  alvo_id: string
+  usuario_id: string
+  emoji: string
+}
+
+export interface Fonte {
+  id: string
+  tenant_id: string
+  nome: string
+  url: string
+  tipo: 'pagina' | 'pdf' | 'imagem' | 'rss'
+  frequencia_min: number
+  ultima_verificacao?: string | null
+  status: 'ativa' | 'pausada' | 'erro'
 }

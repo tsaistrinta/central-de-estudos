@@ -1,11 +1,11 @@
 import { Outlet } from 'react-router-dom'
-import { CalendarDays, Folder, GitFork } from 'lucide-react'
+import { CalendarDays, Sparkles, Users } from 'lucide-react'
 import ChipLogo from './ChipLogo'
 
 const destaques = [
-  { icone: Folder, titulo: 'Curso, semestre e matéria', texto: 'Materiais, links, anotações e códigos no lugar certo.' },
-  { icone: GitFork, titulo: 'Documentos conectados', texto: 'Ligue ideias com [[ ]] e veja tudo no grafo.' },
-  { icone: CalendarDays, titulo: 'Prazos e revisão', texto: 'Provas e entregas na agenda, com fila do que falta revisar.' },
+  { icone: Sparkles, titulo: 'A Yara faz o trabalho chato', texto: 'Lê o site da Fatec, os PDFs e os planos de ensino e monta sua agenda.' },
+  { icone: CalendarDays, titulo: 'Agenda que se atualiza sozinha', texto: 'Aulas, provas e entregas da sua turma, com a fonte de cada data.' },
+  { icone: Users, titulo: 'Sua turma confirma', texto: 'Quando a Yara não tem certeza, a turma vota e todo mundo vê quem votou.' },
 ]
 
 /** Telas 01–02 (entrar, criar conta): painel escuro à esquerda + formulário à direita. */
@@ -19,7 +19,7 @@ export function AuthDividido() {
         </div>
         <div className="my-auto">
           <h1 className="max-w-md text-[40px] leading-[1.12] font-semibold tracking-tight">
-            O curso inteiro organizado num lugar só.
+            Sua Fatec inteira organizada num lugar só.
           </h1>
           <ul className="mt-12 space-y-6">
             {destaques.map(({ icone: Icone, titulo, texto }) => (
@@ -35,7 +35,7 @@ export function AuthDividido() {
             ))}
           </ul>
         </div>
-        <p className="font-mono text-xs text-card/50">Feito por estudantes da Fatec · v1.0</p>
+        <p className="font-mono text-xs text-card/50">Fatec Indaiatuba · PTG de ADS · v2</p>
       </aside>
 
       <main className="grid place-items-center bg-card px-4 py-10">

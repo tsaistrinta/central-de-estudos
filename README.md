@@ -109,7 +109,7 @@ O app sobe em `http://localhost:5173`.
 
 ## Roadmap
 
-Fases 0 e 1 feitas (base visual e navegação). Próximas: 2 · Supabase e login por código → 3 · agenda e espaço pessoal → 4 · comunidade e validação coletiva → 5–6 · Yara → 7 · painel admin → 8 · piloto com a turma → 9 · avaliação do PTG. Detalhes em `CLAUDE.md`.
+Fases 0 a 4 prontas no código (base visual, contas por código, agenda estilo Outlook, espaço pessoal, comunidade e validação coletiva). Próximas: ligar o Supabase (`docs/setup-supabase.md`) → 5–6 · Yara → 7 · painel admin → 8 · piloto com a turma → 9 · avaliação do PTG. Detalhes em `CLAUDE.md`.
 
 ## Autor
 

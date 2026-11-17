@@ -4,8 +4,7 @@
 import type { AuthError } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import type { Perfil } from '../types'
-
-export type ProvedorSocial = 'google' | 'azure'
+import { demo } from './demo'
 
 function cliente() {
   if (!supabase) throw new Error('Supabase não configurado. Preencha o .env.local.')
@@ -22,6 +21,9 @@ const mensagens: Record<string, string> = {
   over_request_rate_limit: 'Muitas tentativas. Aguarde alguns minutos e tente de novo.',
   same_password: 'A nova senha precisa ser diferente da atual.',
   validation_failed: 'Confira os dados informados.',
+  otp_expired: 'Código vencido ou incorreto. Peça um novo.',
+  otp_disabled: 'Entrada por código desativada no servidor.',
+  unexpected_failure: 'Use seu e-mail institucional da Fatec (@aluno.cps.sp.gov.br).',
 }
 
 /** Traduz erros do Supabase Auth para mensagens em português. */
@@ -29,6 +31,8 @@ export function mensagemDeErro(erro: unknown): string {
   const e = erro as Partial<AuthError> | undefined
   if (e?.code && mensagens[e.code]) return mensagens[e.code]
   if (e?.message === 'Failed to fetch') return 'Sem conexão com o servidor. Tente de novo.'
+  if (e?.message?.includes('dominio_nao_permitido') || e?.message === 'Database error saving new user')
+    return 'Use seu e-mail institucional da Fatec (@aluno.cps.sp.gov.br).'
   return e?.message ?? 'Algo deu errado. Tente de novo.'
 }
 
@@ -42,20 +46,7 @@ export async function entrarComEmail(email: string, senha: string) {
   await falharSeErro(cliente().auth.signInWithPassword({ email, password: senha }))
 }
 
-export async function entrarComProvedor(provedor: ProvedorSocial) {
-  await falharSeErro(
-    cliente().auth.signInWithOAuth({
-      provider: provedor,
-      options: {
-        redirectTo: window.location.origin,
-        // A Microsoft só devolve o e-mail se ele for pedido explicitamente.
-        scopes: provedor === 'azure' ? 'email' : undefined,
-      },
-    }),
-  )
-}
-
-/** Cria a conta. Devolve `true` quando o Supabase exige confirmação por e-mail. */
+/** Cria a conta. Devolve `true` quando o Supabase mandou o código de 6 dígitos para confirmar o e-mail. */
 export async function criarConta(nome: string, email: string, senha: string): Promise<boolean> {
   const { data } = await falharSeErro(
     cliente().auth.signUp({
@@ -65,6 +56,20 @@ export async function criarConta(nome: string, email: string, senha: string): Pr
     }),
   )
   return !data.session
+}
+
+/** Confere o código de 6 dígitos enviado ao e-mail (cadastro ou entrada por código). */
+export async function confirmarCodigo(email: string, codigo: string) {
+  await falharSeErro(cliente().auth.verifyOtp({ email, token: codigo, type: 'email' }))
+}
+
+export async function reenviarCodigo(email: string) {
+  await falharSeErro(cliente().auth.resend({ type: 'signup', email }))
+}
+
+/** Entrar sem senha: manda um código para o e-mail (só para quem já tem conta). */
+export async function enviarCodigoDeEntrada(email: string) {
+  await falharSeErro(cliente().auth.signInWithOtp({ email, options: { shouldCreateUser: false } }))
 }
 
 export async function enviarLinkDeRecuperacao(email: string) {
@@ -90,12 +95,8 @@ export async function obterPerfil(id: string): Promise<Perfil | null> {
 }
 
 export async function atualizarPerfil(id: string, valores: Partial<Omit<Perfil, 'id' | 'criado_em'>>) {
+  if (!supabase) return Object.assign(demo.perfil, valores)
   const { data, error } = await cliente().from('perfis').update(valores).eq('id', id).select().single()
   if (error) throw error
   return data as Perfil
-}
-
-export async function definirSemestreAtual(semestreId: string) {
-  const { error } = await cliente().rpc('definir_semestre_atual', { semestre: semestreId })
-  if (error) throw error
 }

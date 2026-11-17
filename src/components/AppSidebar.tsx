@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { LogOut, Search, Settings } from 'lucide-react'
+import { LogOut, Search, Settings, Shield } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import { COMUNIDADE, MEU_ESPACO, type ItemNav } from '@/lib/navegacao'
+import { minhasTurmas } from '@/api/academico'
+import { useContadores } from '@/lib/useContadores'
 import ChipLogo from './ChipLogo'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/auth'
@@ -21,8 +24,9 @@ function Rotulo({ children }: { children: string }) {
 }
 
 export default function AppSidebar() {
+  const contadores = useContadores()
   return (
-    <aside className="fixed inset-y-0 left-0 flex w-56 flex-col gap-3 border-r border-border bg-card px-3.5 py-4">
+    <aside className="fixed inset-y-0 left-0 flex w-56 flex-col gap-3 overflow-y-auto border-r border-border bg-card px-3.5 py-4">
       <Link to="/" className="flex items-center gap-2 px-1.5">
         <ChipLogo />
         <span className="text-[17px] font-semibold tracking-tight">Central de Estudos</span>
@@ -40,7 +44,7 @@ export default function AppSidebar() {
       <Rotulo>Meu espaço · privado</Rotulo>
       <nav className="flex flex-col gap-0.5">
         {MEU_ESPACO.map((item) => (
-          <ItemSidebar key={item.to} {...item} />
+          <ItemSidebar key={item.to} {...item} contador={contadores[item.to]} />
         ))}
       </nav>
 
@@ -50,13 +54,37 @@ export default function AppSidebar() {
           <ItemSidebar key={item.to} {...item} />
         ))}
       </nav>
-      <p className="px-2.5 text-[13px] leading-snug text-faint">
-        Suas disciplinas aparecem aqui quando você entrar numa turma.
-      </p>
+      <Disciplinas />
+      <ItemAdmin />
 
       <MenuUsuario />
     </aside>
   )
+}
+
+function Disciplinas() {
+  const turmas = useQuery({ queryKey: ['minhas-turmas'], queryFn: minhasTurmas, staleTime: 5 * 60_000 })
+  if (!turmas.data?.length) return <p className="px-2.5 text-[13px] leading-snug text-faint">Suas disciplinas aparecem aqui quando você entrar numa turma.</p>
+  return (
+    <div className="-mt-2 flex flex-col gap-px">
+      {turmas.data.map((t) => (
+        <NavLink
+          key={t.id}
+          to={`/turmas/${t.id}`}
+          className={({ isActive }) => cn('flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px]', isActive ? 'bg-background font-medium' : 'hover:bg-muted')}
+        >
+          <i className="size-2 shrink-0 rounded-[3px]" style={{ background: `var(--subject-${t.disciplina.cor})` }} />
+          <span className="truncate">{t.disciplina.nome}</span>
+        </NavLink>
+      ))}
+    </div>
+  )
+}
+
+function ItemAdmin() {
+  const { perfil } = useAuth()
+  if (perfil?.papel !== 'admin') return null
+  return <ItemSidebar to="/admin" label="Administração" icon={Shield} />
 }
 
 function ItemSidebar({ to, label, icon: Icon, end, contador }: ItemNav) {

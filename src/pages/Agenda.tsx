@@ -1,12 +1,21 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { ChevronDown, ChevronLeft, ChevronRight, Filter, Search } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type FullCalendar from '@fullcalendar/react'
+import type { DatesSetArg } from '@fullcalendar/core'
+import { ChevronDown, ChevronLeft, ChevronRight, Filter, Plus, Search, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { DIAS_CURTOS, inicioDaSemana, mesmoDia, nomeDoMes, somarDias, tituloDaSemana } from '@/lib/datas'
+import { inicioDaSemana, nomeDoMes, somarDias, tituloDaSemana } from '@/lib/datas'
+import { VISAO_FC, type ItemAgenda } from '@/lib/agenda'
+import { atualizarEvento, salvarPreferencias } from '@/api/agenda'
+import { tenantAtual } from '@/api/academico'
 import PainelCalendarios from '@/components/agenda/PainelCalendarios'
+import Calendario from '@/components/agenda/Calendario'
+import CartaoEvento from '@/components/agenda/CartaoEvento'
+import NovoEvento, { type ModoNovoEvento } from '@/components/agenda/NovoEvento'
+import { useDadosAgenda } from '@/components/agenda/useDadosAgenda'
 
-// Telas 20–26 · Agenda no padrão Outlook. Fase 1: casca (painel, barra, grade vazia).
-// Fase 3: FullCalendar (timeGrid/dayGrid/list + interaction) dentro desta mesma casca.
+// Telas 20–26 · Agenda no padrão Outlook com a identidade Foco.
 
 const VISOES = [
   { id: 'dia', nome: 'Dia', tecla: 'd' },
@@ -17,50 +26,121 @@ const VISOES = [
 ] as const
 type Visao = (typeof VISOES)[number]['id']
 
-const HORA_INICIO = 8
-const HORA_FIM = 23
-const ALTURA_HORA = 48
-
-function passo(visao: Visao) {
-  if (visao === 'dia') return 1
-  if (visao === 'mes' || visao === 'lista') return 0
-  return 7
+function intervaloInicial(): [Date, Date] {
+  const ini = inicioDaSemana(new Date())
+  return [ini, somarDias(ini, 7)]
 }
 
 export default function Agenda() {
+  const qc = useQueryClient()
   const [params, setParams] = useSearchParams()
-  const visao = (VISOES.find((v) => v.id === params.get('visao'))?.id ?? 'semana') as Visao
+  const celular = typeof window !== 'undefined' && window.innerWidth < 768
+  const visao = (VISOES.find((v) => v.id === params.get('visao'))?.id ?? (celular ? 'dia' : 'semana')) as Visao
+  const api = useRef<FullCalendar>(null)
+  const caixa = useRef<HTMLDivElement>(null)
+  const [[de, ate], setIntervalo] = useState<[Date, Date]>(intervaloInicial)
   const [foco, setFoco] = useState(() => new Date())
-  const [agora, setAgora] = useState(() => new Date())
+  const [titulo, setTitulo] = useState('')
+  const [busca, setBusca] = useState('')
+  const [cartao, setCartao] = useState<{ item: ItemAgenda; x: number; y: number; lado: 'direita' | 'esquerda' } | null>(null)
+  const [modal, setModal] = useState<ModoNovoEvento | null>(null)
 
-  useEffect(() => {
-    const t = setInterval(() => setAgora(new Date()), 60_000)
-    return () => clearInterval(t)
-  }, [])
+  const { itens, turmas, preferencias } = useDadosAgenda(de, ate)
+  const tenant = useQuery({ queryKey: ['tenant'], queryFn: tenantAtual, staleTime: 30 * 60_000 })
+  const [ocultasLocal, setOcultasLocal] = useState<string[] | null>(null)
+  const ocultas = useMemo(() => ocultasLocal ?? preferencias?.camadas_ocultas ?? [], [ocultasLocal, preferencias])
+
+  const visiveis = useMemo(() => {
+    const termo = busca.trim().toLowerCase()
+    return itens.filter(
+      (i) =>
+        !ocultas.includes(i.camada) &&
+        (visao !== 'lista' || (i.tipo !== 'aula' && i.estilo !== 'ocupado')) &&
+        (preferencias?.mostrar_sugestoes !== false || i.estilo !== 'sugestao') &&
+        (preferencias?.mostrar_propostas !== false || i.tipo !== 'proposta') &&
+        (!termo || i.titulo.toLowerCase().includes(termo) || i.turma?.disciplina.nome.toLowerCase().includes(termo)),
+    )
+  }, [itens, ocultas, preferencias, busca, visao])
+
+  const diasComProva = useMemo(() => itens.filter((i) => i.estilo === 'prova').map((i) => i.inicio), [itens])
+  const sugestoes = itens.filter((i) => i.estilo === 'sugestao').length
+
+  function alternarCamada(id: string) {
+    const novo = ocultas.includes(id) ? ocultas.filter((x) => x !== id) : [...ocultas, id]
+    setOcultasLocal(novo)
+    salvarPreferencias({ camadas_ocultas: novo }).catch(() => {})
+  }
 
   function mudarVisao(v: Visao) {
-    setParams((p) => {
-      p.set('visao', v)
-      return p
-    })
+    setCartao(null)
+    api.current?.getApi().changeView(VISAO_FC[v])
+    setParams(
+      (p) => {
+        p.set('visao', v)
+        return p
+      },
+      { replace: true },
+    )
   }
 
-  function navegar(direcao: 1 | -1) {
-    const n = passo(visao)
-    if (n) setFoco((f) => somarDias(f, n * direcao))
-    else setFoco((f) => new Date(f.getFullYear(), f.getMonth() + direcao, 1))
+  const irPara = useCallback((d: Date) => {
+    setFoco(d)
+    api.current?.getApi().gotoDate(d)
+  }, [])
+
+  function aoIntervalo(arg: DatesSetArg) {
+    setIntervalo((atual) => (atual[0].getTime() === arg.start.getTime() && atual[1].getTime() === arg.end.getTime() ? atual : [arg.start, arg.end]))
+    const atual = arg.view.currentStart
+    setFoco((f) => (f >= arg.view.currentStart && f < arg.view.currentEnd ? f : atual))
+    const tipo = arg.view.type
+    setTitulo(
+      tipo === 'timeGridDay'
+        ? atual.toLocaleDateString('pt-BR', celular ? { day: 'numeric', month: 'short' } : { weekday: 'long', day: 'numeric', month: 'long' })
+        : tipo === 'dayGridMonth'
+          ? celular
+            ? atual.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
+            : nomeDoMes(atual).replace(/ (\d{4})$/, ' de $1')
+          : tipo === 'lista30'
+            ? celular
+              ? '30 dias'
+              : 'Próximos 30 dias'
+            : tituloDaSemana(inicioDaSemana(atual)),
+    )
   }
 
-  // Atalhos do Outlook: T hoje, D/U/W/M/L visões, ← → navegar.
+  function abrirCartao(item: ItemAgenda, el: HTMLElement) {
+    const caixaR = caixa.current!.getBoundingClientRect()
+    const r = el.getBoundingClientRect()
+    const largura = 372
+    const direita = r.right + 10 + largura < caixaR.right
+    const x = caixaR.width < largura + 40 ? 8 : direita ? r.right - caixaR.left + 10 : Math.max(8, r.left - caixaR.left - largura - 10)
+    const y = Math.min(Math.max(8, r.top - caixaR.top - 20), caixaR.height - 440)
+    setCartao({ item, x, y: Math.max(8, y), lado: direita ? 'direita' : 'esquerda' })
+  }
+
+  const mover = useMutation({
+    mutationFn: ({ item, inicio, fim }: { item: ItemAgenda; inicio: Date; fim: Date | null; desfazer: () => void }) =>
+      atualizarEvento(item.evento!.id, { inicio: inicio.toISOString(), fim: fim?.toISOString() ?? null }),
+    onError: (_e, v) => v.desfazer(),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['agenda'] }),
+  })
+
+  // Atalhos do Outlook: N novo, T hoje, D/U/W/M/L visões, ← → navegar, / buscar.
+  const buscaRef = useRef<HTMLInputElement>(null)
   useEffect(() => {
     function tecla(e: KeyboardEvent) {
       const alvo = e.target as HTMLElement
-      if (e.ctrlKey || e.metaKey || e.altKey || alvo.closest('input, textarea, [contenteditable]')) return
+      if (e.ctrlKey || e.metaKey || e.altKey || modal || alvo.closest('input, textarea, select, [contenteditable]')) return
       const k = e.key.toLowerCase()
-      if (k === 't') setFoco(new Date())
-      else if (k === 'arrowleft') navegar(-1)
-      else if (k === 'arrowright') navegar(1)
-      else {
+      const cal = api.current?.getApi()
+      if (k === 'n') setModal({ modo: 'novo' })
+      else if (k === 't') cal?.today()
+      else if (k === 'arrowleft') cal?.prev()
+      else if (k === 'arrowright') cal?.next()
+      else if (k === '/') {
+        e.preventDefault()
+        buscaRef.current?.focus()
+      } else {
         const v = VISOES.find((x) => x.tecla === k)
         if (v) mudarVisao(v.id)
       }
@@ -69,119 +149,130 @@ export default function Agenda() {
     return () => window.removeEventListener('keydown', tecla)
   })
 
-  const semana = inicioDaSemana(foco)
-  const dias =
-    visao === 'dia' ? [foco] : visao === 'semana-util' ? [1, 2, 3, 4, 5].map((i) => somarDias(semana, i)) : Array.from({ length: 7 }, (_, i) => somarDias(semana, i))
-  const titulo =
-    visao === 'dia'
-      ? foco.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })
-      : visao === 'mes' || visao === 'lista'
-        ? nomeDoMes(foco).replace(/ (\d{4})$/, ' de $1')
-        : tituloDaSemana(semana)
-
-  const minutosAgora = (agora.getHours() - HORA_INICIO) * 60 + agora.getMinutes()
-  const mostraAgora = minutosAgora >= 0 && agora.getHours() < HORA_FIM
+  const resumo = useMemo(() => {
+    const canceladas = itens.filter((i) => i.estilo === 'cancelado').length
+    const propostas = itens.filter((i) => i.tipo === 'proposta').length
+    return { canceladas, propostas }
+  }, [itens])
 
   return (
     <div className="flex h-full">
-      <PainelCalendarios foco={foco} onEscolherDia={setFoco} onNovoEvento={() => {}} />
+      <div className="hidden lg:flex">
+      <PainelCalendarios
+        foco={foco}
+        onEscolherDia={irPara}
+        onNovoEvento={() => setModal({ modo: 'novo' })}
+        turmas={turmas}
+        ocultas={ocultas}
+        onAlternar={alternarCamada}
+        diasComProva={diasComProva}
+        sugestoes={sugestoes}
+        rodape={
+          (resumo.canceladas > 0 || resumo.propostas > 0 || sugestoes > 0) && (
+            <div className="mt-auto flex flex-col gap-1.5 rounded-lg border border-border bg-background p-3">
+              <span className="flex items-center gap-1.5 text-[12.5px] font-semibold">
+                <Sparkles size={14} strokeWidth={1.9} className="text-primary" /> Yara neste período
+              </span>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                {[
+                  resumo.canceladas && <b key="c" className="text-foreground">{resumo.canceladas} cancelada(s)</b>,
+                  resumo.propostas && <b key="p" className="text-foreground">{resumo.propostas} data(s) esperando a turma</b>,
+                  sugestoes && <b key="s" className="text-foreground">{sugestoes} sugestão(ões) de estudo</b>,
+                ]
+                  .filter(Boolean)
+                  .flatMap((n, i) => (i ? [' · ', n] : [n]))}
+              </p>
+            </div>
+          )
+        }
+      />
+      </div>
 
-      <section className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-[58px] shrink-0 items-center gap-2 border-b border-border pr-4 pl-[18px]">
-          <button onClick={() => setFoco(new Date())} className="h-8 rounded-md border border-border px-3.5 text-[13px] font-semibold hover:bg-muted">
+      <section ref={caixa} className="relative flex min-w-0 flex-1 flex-col">
+        <header className="flex h-[58px] shrink-0 items-center gap-2 overflow-x-auto border-b border-border pr-3 pl-3 md:pr-4 md:pl-[18px]">
+          <button onClick={() => api.current?.getApi().today()} className="h-8 rounded-md border border-border px-3.5 text-[13px] font-semibold hover:bg-muted" title="Hoje (T)">
             Hoje
           </button>
-          <button onClick={() => navegar(-1)} className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-muted" aria-label="Anterior">
+          <button onClick={() => api.current?.getApi().prev()} className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-muted" aria-label="Anterior">
             <ChevronLeft size={17} strokeWidth={2} />
           </button>
-          <button onClick={() => navegar(1)} className="-ml-1.5 grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-muted" aria-label="Próximo">
+          <button onClick={() => api.current?.getApi().next()} className="-ml-1.5 grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-muted" aria-label="Próximo">
             <ChevronRight size={17} strokeWidth={2} />
           </button>
-          <h1 className="ml-1.5 flex items-center gap-1.5 truncate text-[17px] font-semibold tracking-tight first-letter:uppercase">
-            {titulo}
-            <ChevronDown size={15} strokeWidth={2} className="text-muted-foreground" />
+          <h1 className="ml-1.5 flex min-w-0 flex-1 items-center gap-1.5 truncate text-[15px] md:flex-none md:text-[17px] font-semibold tracking-tight first-letter:uppercase">
+            <span className="truncate">{titulo}</span>
+            <ChevronDown size={15} strokeWidth={2} className="shrink-0 text-muted-foreground" />
           </h1>
-          <span className="flex-1" />
+          <span className="hidden flex-1 md:block" />
           <div className="flex shrink-0 overflow-hidden rounded-md border border-border text-[12.5px] font-medium">
-            {VISOES.map((v) => (
+            {VISOES.filter((v) => !celular || v.id === 'dia' || v.id === 'mes' || v.id === 'lista').map((v) => (
               <button
                 key={v.id}
                 onClick={() => mudarVisao(v.id)}
-                className={cn(
-                  'h-[30px] border-r border-border px-[11px] last:border-r-0',
-                  v.id === visao ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-muted',
-                )}
+                title={`${v.nome} (${v.tecla.toUpperCase()})`}
+                className={cn('h-[30px] border-r border-border px-[11px] last:border-r-0', v.id === visao ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-muted')}
               >
                 {v.nome}
               </button>
             ))}
           </div>
-          <button className="grid size-8 place-items-center rounded-md border border-border text-muted-foreground hover:bg-muted" aria-label="Filtrar">
+          <button
+            onClick={() => setModal({ modo: 'novo' })}
+            className="grid size-8 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground lg:hidden"
+            aria-label="Novo evento"
+          >
+            <Plus size={16} />
+          </button>
+          <button
+            onClick={() => salvarPreferencias({ mostrar_propostas: !(preferencias?.mostrar_propostas ?? true) }).then(() => qc.invalidateQueries({ queryKey: ['agenda-preferencias'] }))}
+            className={cn('hidden size-8 place-items-center rounded-md border border-border hover:bg-muted md:grid', preferencias?.mostrar_propostas === false ? 'bg-accent text-accent-foreground' : 'text-muted-foreground')}
+            title={preferencias?.mostrar_propostas === false ? 'Mostrar propostas da turma' : 'Esconder propostas da turma'}
+          >
             <Filter size={16} strokeWidth={1.75} />
           </button>
-          <label className="flex h-8 w-[196px] shrink-0 items-center gap-2 rounded-md border border-border px-2.5 text-[12.5px] text-muted-foreground">
+          <label className="hidden h-8 w-[196px] shrink-0 items-center xl:flex gap-2 rounded-md border border-border px-2.5 text-[12.5px] text-muted-foreground focus-within:border-primary">
             <Search size={15} strokeWidth={1.75} />
-            <input placeholder="Buscar na agenda" className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground" />
+            <input ref={buscaRef} value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar na agenda" className="min-w-0 flex-1 bg-transparent text-foreground outline-none placeholder:text-muted-foreground" />
             <kbd className="rounded border border-border px-1.5 font-mono text-[10.5px]">/</kbd>
           </label>
         </header>
 
-        {visao === 'mes' || visao === 'lista' ? (
-          <div className="grid flex-1 place-items-center p-10 text-center text-sm text-muted-foreground">
-            <p>
-              Visão <b className="text-foreground">{VISOES.find((v) => v.id === visao)?.nome}</b> chega na Fase 3 — referência: tela{' '}
-              <span className="font-mono">{visao === 'mes' ? '21' : '24'}</span>.
-            </p>
-          </div>
-        ) : (
-          <div className="flex min-h-0 flex-1 flex-col">
-            <div className="grid border-b border-border" style={{ gridTemplateColumns: `58px repeat(${dias.length}, minmax(0,1fr))` }}>
-              <div />
-              {dias.map((d) => {
-                const hoje = mesmoDia(d, agora)
-                return (
-                  <div key={d.toISOString()} className={cn('flex items-center gap-2 border-l border-muted px-2.5 pt-2 pb-[7px]', hoje && 'shadow-[inset_0_3px_0_var(--primary)]')}>
-                    <span className={cn('grid h-8 min-w-8 place-items-center text-[21px] font-semibold tracking-tight tabular-nums', hoje && 'rounded-full bg-primary text-base text-primary-foreground')}>
-                      {d.getDate()}
-                    </span>
-                    <span className={cn('text-xs font-medium', hoje ? 'text-primary' : 'text-muted-foreground')}>{DIAS_CURTOS[d.getDay()]}</span>
-                  </div>
-                )
-              })}
-            </div>
-            <div className="grid min-h-0 flex-1 overflow-y-auto" style={{ gridTemplateColumns: `58px repeat(${dias.length}, minmax(0,1fr))` }}>
-              <div className="relative" style={{ height: (HORA_FIM - HORA_INICIO) * ALTURA_HORA }}>
-                {Array.from({ length: HORA_FIM - HORA_INICIO - 1 }, (_, i) => (
-                  <span key={i} className="absolute right-2 -translate-y-1/2 bg-card px-0.5 font-mono text-[10.5px] text-muted-foreground" style={{ top: (i + 1) * ALTURA_HORA }}>
-                    {String(HORA_INICIO + i + 1).padStart(2, '0')}:00
-                  </span>
-                ))}
-              </div>
-              {dias.map((d) => {
-                const hoje = mesmoDia(d, agora)
-                const fimDeSemana = d.getDay() === 0 || d.getDay() === 6
-                return (
-                  <div
-                    key={d.toISOString()}
-                    className={cn('relative border-l border-muted', fimDeSemana && 'bg-background/40', hoje && 'bg-accent/30')}
-                    style={{
-                      height: (HORA_FIM - HORA_INICIO) * ALTURA_HORA,
-                      backgroundImage: 'linear-gradient(to bottom, var(--border) 1px, transparent 1px)',
-                      backgroundSize: `100% ${ALTURA_HORA}px`,
-                    }}
-                  >
-                    {hoje && mostraAgora && (
-                      <div className="absolute right-0 -left-px z-10 h-0.5 bg-destructive" style={{ top: (minutosAgora / 60) * ALTURA_HORA - 1 }}>
-                        <span className="absolute -top-1 -left-[5px] size-2.5 rounded-full bg-destructive" />
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
+        <div className="min-h-0 flex-1">
+          <Calendario
+            apiRef={api}
+            visao={visao}
+            itens={visiveis}
+            horaInicio={preferencias?.hora_inicio ?? 8}
+            horaFim={preferencias?.hora_fim ?? 23}
+            onIntervalo={aoIntervalo}
+            onClicar={abrirCartao}
+            onSelecionar={(inicio, fim, diaTodo) => {
+              setCartao(null)
+              setModal({ modo: 'novo', inicio, fim: diaTodo ? inicio : fim, diaTodo })
+            }}
+            onMover={(item, inicio, fim, desfazer) => mover.mutate({ item, inicio, fim, desfazer })}
+          />
+        </div>
+
+        {cartao && (
+          <CartaoEvento
+            key={cartao.item.id}
+            item={cartao.item}
+            posicao={cartao}
+            onFechar={() => setCartao(null)}
+            onEditar={(item) => {
+              setCartao(null)
+              setModal({ modo: 'editar', item })
+            }}
+            onPropor={(item) => {
+              setCartao(null)
+              setModal({ modo: 'propor', item })
+            }}
+          />
         )}
       </section>
+
+      {modal && <NovoEvento config={modal} turmas={turmas} itens={itens} fimDoPeriodo={tenant.data?.fim_periodo} onFechar={() => setModal(null)} />}
     </div>
   )
 }

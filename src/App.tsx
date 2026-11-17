@@ -1,3 +1,4 @@
+import { lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import { AuthCartao, AuthDividido } from './components/AuthLayout'
@@ -9,19 +10,20 @@ import RedefinirSenha from './pages/auth/RedefinirSenha'
 import BoasVindas from './pages/auth/BoasVindas'
 import Legal from './pages/Legal'
 import Hoje from './pages/Hoje'
-import Agenda from './pages/Agenda'
 import Materias from './pages/Materias'
 import Materia from './pages/Materia'
 import Entrada from './pages/Entrada'
 import Tarefas from './pages/Tarefas'
 import Revisar from './pages/Revisar'
-import Notas from './pages/Notas'
-import Turma from './pages/Turma'
 import Curso from './pages/Curso'
 import Unidade from './pages/Unidade'
-import Admin from './pages/admin/Admin'
 import Configuracoes from './pages/Configuracoes'
 import NaoEncontrada from './pages/NaoEncontrada'
+
+const Agenda = lazy(() => import('./pages/Agenda'))
+const Notas = lazy(() => import('./pages/Notas'))
+const Turma = lazy(() => import('./pages/Turma'))
+const Admin = lazy(() => import('./pages/admin/Admin'))
 
 // Rotas da nova direção (Central para a Fatec, com a Yara). Mockups: telas 01–26.
 // Sem .env.local o app roda em modo demonstração: as rotas protegidas ficam abertas.

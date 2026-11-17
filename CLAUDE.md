@@ -10,7 +10,7 @@
 
 - **Repo:** https://github.com/tsaistrinta/central-de-estudos (público, `main`). **Local:** `C:\dev\central-de-estudos`.
 - **Nova direção (03/11/2026):** o app pessoal antigo (cursos/semestres, documentos conectados, grafo, biblioteca de código, planos pagos) foi substituído pela Central para a Fatec com a IA **Yara**. O app fica na raiz do repo (sem monorepo); o worker da IA entra em `workers/yara/` na Fase 5.
-- **Fase 0 e Fase 1: feitas** (seção 8). Próxima: **Fase 2** (Supabase novo + login por código).
+- **Fases 0 a 4: código feito** (seção 8). Falta o Lucas ligar o Supabase (passo a passo em `docs/setup-supabase.md`). Próxima: **Fase 5** (Yara v1).
 
 ---
 
@@ -79,17 +79,21 @@ Telas do professor (12–13) entram na Fase 4. Novo evento (23) e cartão do eve
 - FullCalendar 6 (`timeGrid`, `dayGrid`, `list`, `interaction`) com `eventContent` próprio; 08–23 h, slots de 30 min, snap 15 min, linha do agora.
 - Evento: fundo da cor da matéria a 12%, barra esquerda 3 px. Prova = etiqueta PROVA; entrega = ENTREGA; proposta = tracejado âmbar; sugestão da Yara = listras azuis; cancelado = riscado a 55%; trabalho = hachurado.
 - Cartão rápido ao clicar, criação por frase, arrastar/redimensionar com update otimista, atalhos (N, T, D, U, W, M, L, ← →, /, Ctrl+J), prefetch ±3 semanas, Realtime, link .ics pessoal.
-- **Fase 1 entregou a casca** (`src/pages/Agenda.tsx`, `src/components/agenda/`): trilho, painel com minicalendário funcional, barra com visões e atalhos, grade da semana vazia com linha do agora. A Fase 3 encaixa o FullCalendar dentro dela.
-
+- **Feito (Fase 3):** `src/pages/Agenda.tsx` + `src/components/agenda/` (Calendario com FullCalendar 6, CartaoEvento, NovoEvento com frase e horários livres, PainelCalendarios com camadas salvas nas preferências, `useDadosAgenda` com cache/prefetch/Realtime). Regras em `src/lib/agenda.ts` (`montarItens`): aulas da grade expandidas por dia, feriado e aula cancelada tiram a aula, prova no horário da aula ocupa o lugar dela, propostas abertas aparecem tracejadas. Parser de frases em `src/lib/frase.ts`.
 ---
 
 ## 4. Modelo de dados
 
-Schema completo e testado no kit inicial (`supabase/migrations/0001_schema.sql` do starter kit; será aplicado na Fase 2 substituindo `20261027000000_schema_inicial.sql`). Principais tabelas: `tenants`, `perfis` (papel, tenant), `cursos`, `disciplinas`, `turmas` (`tamanho_real`), `matriculas`, `aulas_horario`, `eventos` (escopo unidade/curso/turma/pessoal, origem, fonte, confiança, status, rrule, lembretes), `evento_override`, `agenda_preferencias` (camadas, lembretes, `ics_token`), `materiais`, `tarefas`, `avaliacoes`, `notas`, `frequencia`, `mensagens`, `duvidas`, `respostas`, `propostas`, `votos`, `reacoes`, `fontes`, `capturas`, `conhecimento_trechos` (pgvector 1024), `curadoria`, `notificacoes`, `auditoria`, fila `yara_jobs` (pgmq).
+Schema em `supabase/migrations/20261027000000_schema_inicial.sql` (testado no Postgres 16 com RLS) + `supabase/seed.sql` (Indaiatuba/ADS 2026/2, provisório) + `20261103000001_yara.sql` (pgvector, pgmq, pg_cron; Fase 5).
 
-RLS: dados pessoais por `usuario_id = auth.uid()`; dados de turma só para quem está em `matriculas`; tudo filtrado pelo tenant; votar só aluno matriculado com proposta aberta.
+Tabelas: `tenants`, `cursos`, `perfis` (papel, curso, semestre, turno, onboarding), `disciplinas` (cor), `turmas` (`tamanho_real`, `professor_id`), `matriculas`, `aulas_horario`, `eventos` (escopo unidade/curso/turma/pessoal, origem, status, cancelado, rrule, lembretes), `evento_override`, `agenda_preferencias` (camadas ocultas, `ics_token`), `materiais` (R2, `na_entrada`, `oficial`), `tarefas`, `revisao_itens` (SM-2), `avaliacoes`, `notas`, `frequencia`, `mensagens` (canal `avisos` só professor), `duvidas`, `respostas`, `propostas`, `votos`, `reacoes`, `fontes`, `capturas`, `curadoria`, `notificacoes`, `auditoria`. View `pessoas` (nome e papel sem e-mail).
 
----
+Funções: `criar_perfil` (trigger em auth.users, recusa domínio fora do tenant), `dominio_permitido`, `concluir_onboarding`, `quorum_da_turma`, `avaliar_proposta` (trigger nos votos), `aplicar_proposta` (cria/muda/cancela o evento), `fechar_proposta` (professor/admin), `expirar_propostas` (pg_cron).
+
+RLS: pessoal por `auth.uid()`; turma por `esta_na_turma()` (matrícula ou professor da turma); tudo no tenant; escrita da estrutura só admin; papel do próprio perfil não muda.
+
+### Camada de dados do front
+`src/api/` — `base.ts` (cliente + `modoDemo`), `academico.ts`, `agenda.ts`, `espaco.ts`, `comunidade.ts`, `admin.ts`, `auth.ts`. **Sem `.env.local` tudo é servido por `demo.ts`** (dados do piloto em volta da semana atual). Telas usam TanStack Query (`src/lib/query.ts`).
 
 ## 5. Padrões do projeto
 
@@ -125,11 +129,11 @@ Antes de concluir qualquer tarefa: `npm run lint && npm run build`.
 
 - [x] **Fase 0 · Preparação** — repo reaproveitado, CLAUDE.md novo, mockups em `docs/design/`.
 - [x] **Fase 1 · Fundação web** — navegação nova (sidebar + trilho), rotas novas com stubs, componentes Foco, casca da agenda.
-- [ ] **Fase 2 · Supabase e contas** — schema novo com RLS (resetar o banco antigo), login por código no e-mail + Auth Hook de domínio, seed Fatec Indaiatuba/ADS, onboarding (curso, semestre, turmas).
-- [ ] **Fase 3 · Espaço pessoal** — **agenda Outlook primeiro** (FullCalendar + TanStack Query), depois matérias/materiais (R2), tarefas, revisão, notas e faltas.
-- [ ] **Fase 4 · Comunidade** — turmas, conversa (Realtime), dúvidas, reações, validação coletiva, professor.
+- [x] **Fase 2 · Supabase e contas** — schema novo com RLS, cadastro por código (OTP) com domínio do tenant, seed Indaiatuba/ADS, onboarding por turma. *Falta: o Lucas aplicar no Supabase.*
+- [x] **Fase 3 · Espaço pessoal** — agenda Outlook (dia, semana útil, semana, mês, lista; cartão; frase; arrastar; camadas; atalhos; .ics), Hoje com dados, matérias/materiais (upload R2), caixa de entrada, tarefas Kanban, revisão espaçada, notas e faltas (Fui/Faltei). *Falta: publicar as Edge Functions do R2 e do .ics.*
+- [x] **Fase 4 · Comunidade** — turma (conversa com canais e Realtime, mural do professor, materiais, dúvidas, confirmações com votos visíveis, membros, entrar em outras turmas), reações com "ver quem", curso e unidade, admin (visão, fontes, curadoria, contas e pedidos de professor, turmas/vagas/professor, servidor), layout de celular.
 - [ ] **Fase 5 · Yara v1** — coletor + calendário acadêmico + grade de horários + avisos em imagem.
 - [ ] **Fase 6 · Yara v2** — caixa de entrada, plano de ensino, SIGA, RAG, resumo diário.
-- [ ] **Fase 7 · Painel admin.**
+- [ ] **Fase 7 · Painel admin** — básico já existe; falta auditoria/LGPD e estatísticas do piloto.
 - [ ] **Fase 8 · PWA, deploy, piloto.**
 - [ ] **Fase 9 · Avaliação para o PTG.**

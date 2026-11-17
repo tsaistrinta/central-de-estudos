@@ -1,65 +1,41 @@
 # Arquitetura — Central de Estudos
 
-## Visão geral (versão Free)
-
-O app é uma **SPA React** hospedada no **Cloudflare Pages**. O "back-end" é uma
-composição de serviços gerenciados em plano gratuito: **Supabase** (autenticação,
-banco PostgreSQL e Edge Functions), **Cloudflare R2** (armazenamento de arquivos) e
-**Resend** (e-mails de cadastro).
+Híbrida: o app, o banco e os arquivos ficam na nuvem (acesso de qualquer lugar); a IA local (Yara) roda num PC com GPU e só faz conexões de saída.
 
 ```mermaid
 flowchart LR
-    subgraph Cliente
-      U["Usuário<br/>navegador / PWA"]
+    U["Aluno / professor<br/>navegador ou celular (PWA)"] --> FE["App React + Vite<br/>Cloudflare Pages"]
+    FE -->|"login por código · dados · Realtime"| SB["Supabase (São Paulo)<br/>Auth · Postgres + RLS"]
+    FE -->|"pede URL assinada"| EF["Edge Functions<br/>r2-upload-url · r2-download-url · agenda-ics"]
+    EF --> R2["Cloudflare R2<br/>arquivos"]
+    FE -.->|"envia/baixa direto"| R2
+    SB -->|"código de 6 dígitos"| RS["Resend (SMTP)"]
+    OUT["Outlook · Google · iPhone"] -->|"assina o .ics"| EF
+    subgraph PC["PC do Lucas (depois: servidor da Fatec)"]
+      Y["Worker Yara<br/>Python + Ollama (Qwen3.5)"]
     end
-
-    subgraph Hospedagem
-      FE["App React + Vite + TS<br/>Cloudflare Pages"]
-    end
-
-    subgraph "Back-end (BaaS)"
-      SB["Supabase Auth + PostgreSQL<br/>Row Level Security"]
-      EF["Supabase Edge Functions<br/>upload-url · confirmar-upload · download-url"]
-      R2["Cloudflare R2<br/>arquivos (compatível com S3)"]
-      RS["Resend<br/>e-mail transacional"]
-    end
-
-    U --> FE
-    FE -->|"login (OAuth Google / e-mail)"| SB
-    FE -->|"CRUD de dados (SQL via API)"| SB
-    FE -->|"1. solicita URL pré-assinada"| EF
-    EF -->|"2. checa cota e assina"| R2
-    FE -.->|"3. envia/baixa arquivo direto"| R2
-    SB -->|"envio de e-mail de confirmação"| RS
-    GH["GitHub Actions<br/>keep-alive (cron 3 dias)"] -->|"ping anti-pausa"| SB
+    Y -->|"puxa tarefas da fila (pgmq) · grava eventos"| SB
+    Y -->|"lê páginas e PDFs públicos"| SITE["fatecid.com.br"]
+    GH["GitHub Actions"] -->|"keep-alive a cada 3 dias"| SB
 ```
 
-### Princípios
+## Peças
 
-- **Isolamento por usuário:** toda tabela tem `usuario_id` e RLS no PostgreSQL; cada
-  conta só enxerga os próprios dados.
-- **Upload seguro e com cota:** o front nunca recebe credenciais do R2. Ele pede uma
-  **URL pré-assinada** à Edge Function, que só a emite após checar o limite por arquivo
-  (25 MB) e a cota do usuário (200 MB no Free). O arquivo trafega **direto** entre o
-  navegador e o R2 — barato (egress do R2 é gratuito) e sem sobrecarregar o servidor.
-- **Custo de lançamento zero:** todos os serviços rodam em free tier.
+| Peça | O que faz |
+|---|---|
+| `src/` | SPA React 19 + TypeScript + Tailwind v4 (identidade Foco). Sem `.env.local` roda em modo demonstração. |
+| `src/api/*` | Única camada que fala com o Supabase. Cada função tem a versão demonstração (`demo.ts`). |
+| `supabase/migrations` | Schema, RLS e regras (domínio do e-mail, validação coletiva, aplicação das propostas). |
+| `supabase/functions` | URLs assinadas do R2 e o feed `.ics` pessoal. |
+| `workers/yara` (Fase 5) | Coletor + extração com IA local. Se parar, o app continua; as tarefas esperam na fila. |
 
-## Evolução para planos pagos (v2)
+## Segurança
 
-A arquitetura **não muda** — apenas destrava limites e adiciona a camada de cobrança:
+- Cadastro só com e-mail de domínio permitido do tenant; o trigger `criar_perfil` recusa o resto.
+- RLS em todas as tabelas: dados pessoais por `auth.uid()`, dados da turma só para quem está nela.
+- O front nunca recebe a service role nem as chaves do R2. O `.ics` usa um token pessoal e secreto.
+- A Central nunca pede nem guarda a senha do SIGA.
 
-```mermaid
-flowchart LR
-    FE["App React"] --> SB["Supabase Pro<br/>(backup, sem pausa)"]
-    FE --> R2["Cloudflare R2<br/>pay-as-you-go"]
-    FE -->|"checkout"| ST["Stripe<br/>assinaturas + GB extra"]
-    ST -->|"webhook: atualiza tier/cota"| SB
-```
+## Limites do plano gratuito (piloto)
 
-## Como recriar este diagrama no draw.io
-
-1. Abra <https://app.diagrams.net> (draw.io).
-2. Menu **Arrange → Insert → Advanced → Mermaid**.
-3. Cole o bloco Mermaid "Visão geral" acima e confirme — o diagrama é gerado e fica editável.
-
-(No Miro, use o app "Mermaid to diagram" ou monte as caixas manualmente a partir deste modelo.)
+Supabase Free (500 MB de banco, pausa após 7 dias sem uso → keep-alive), R2 (10 GB, download sem custo), Resend (100 e-mails/dia), Cloudflare Pages.

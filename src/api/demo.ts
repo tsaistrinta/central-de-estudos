@@ -1,0 +1,285 @@
+// Dados do modo demonstração (sem .env.local). Espelham o piloto da Fatec Indaiatuba
+// e são montados em volta da semana atual, para a agenda nunca aparecer vazia.
+// Tudo fica só na memória: recarregar a página volta ao estado inicial.
+
+import { inicioDaSemana, somarDias } from '@/lib/datas'
+import type {
+  AgendaPreferencias,
+  AulaHorario,
+  Avaliacao,
+  Curso,
+  Disciplina,
+  Duvida,
+  Evento,
+  Fonte,
+  Frequencia,
+  ItemRevisao,
+  Material,
+  Mensagem,
+  Nota,
+  Perfil,
+  Pessoa,
+  Proposta,
+  Reacao,
+  Resposta,
+  Tarefa,
+  Tenant,
+  Turma,
+  Voto,
+} from '@/types'
+
+export const DEMO_ID = 'demo-lucas'
+const TENANT = 't-fatec'
+const CURSO = 'c-ads'
+
+function quando(diaDaSemana: number, hora: string, semanas = 0) {
+  const d = somarDias(inicioDaSemana(new Date()), diaDaSemana + semanas * 7)
+  const [h, m] = hora.split(':').map(Number)
+  d.setHours(h, m, 0, 0)
+  return d.toISOString()
+}
+
+let seq = 0
+export function novoId(prefixo = 'demo') {
+  seq += 1
+  return `${prefixo}-${Date.now().toString(36)}-${seq}`
+}
+
+const agora = new Date().toISOString()
+
+const tenant: Tenant = {
+  id: TENANT,
+  nome: 'Fatec Indaiatuba',
+  slug: 'fatec-indaiatuba',
+  dominios_permitidos: ['aluno.cps.sp.gov.br', 'fatec.sp.gov.br', 'cps.sp.gov.br'],
+  site_url: 'https://www.fatecid.com.br/site/',
+  periodo_atual: '2026/2',
+  inicio_periodo: '2026-07-27',
+  fim_periodo: '2026-12-14',
+}
+
+const perfil: Perfil = {
+  id: DEMO_ID,
+  tenant_id: TENANT,
+  nome: 'Lucas Tsai',
+  email: 'lucas.tsai@aluno.cps.sp.gov.br',
+  papel: 'admin',
+  quer_ser_professor: false,
+  curso_id: CURSO,
+  semestre: 3,
+  turno: 'noite',
+  onboarding_concluido: true,
+  preferencias: {},
+  criado_em: agora,
+}
+
+const disciplinas: Disciplina[] = [
+  { id: 'd-poo', curso_id: CURSO, nome: 'Programação Orientada a Objetos', sigla: 'POO', semestre_matriz: 3, cor: 'laranja' },
+  { id: 'd-est', curso_id: CURSO, nome: 'Estatística', sigla: 'EST', semestre_matriz: 3, cor: 'petroleo' },
+  { id: 'd-es2', curso_id: CURSO, nome: 'Engenharia de Software II', sigla: 'ES II', semestre_matriz: 3, cor: 'roxo' },
+  { id: 'd-ihc', curso_id: CURSO, nome: 'Interação Humano-Computador', sigla: 'IHC', semestre_matriz: 3, cor: 'framboesa' },
+  { id: 'd-soc', curso_id: CURSO, nome: 'Sociedade e Tecnologia', sigla: 'SOC', semestre_matriz: 3, cor: 'mostarda' },
+  { id: 'd-bd', curso_id: CURSO, nome: 'Banco de Dados', sigla: 'BD', semestre_matriz: 3, cor: 'azul' },
+]
+
+const professores: Record<string, string> = {
+  'd-poo': 'Prof. Furgeri',
+  'd-est': 'Prof. Carlos',
+  'd-es2': 'Prof. Marlon',
+  'd-ihc': 'Prof. Michel',
+  'd-soc': 'Profa. Miriam',
+  'd-bd': 'Prof. Renato',
+}
+
+const turmas: Turma[] = disciplinas.map((d) => ({
+  id: 't' + d.id.slice(1),
+  disciplina_id: d.id,
+  periodo_letivo: '2026/2',
+  turno: 'noite',
+  professor_nome: professores[d.id],
+  professor_id: d.id === 'd-est' ? 'p-carlos' : null,
+  tamanho_real: 40,
+}))
+
+const aulas: AulaHorario[] = [
+  { id: 'a1', turma_id: 't-poo', dia_semana: 1, inicio: '19:00', fim: '20:40', sala: 'Sala 7' },
+  { id: 'a2', turma_id: 't-est', dia_semana: 1, inicio: '20:50', fim: '22:30', sala: 'Sala 12' },
+  { id: 'a3', turma_id: 't-poo', dia_semana: 2, inicio: '19:00', fim: '20:40', sala: 'Sala 7' },
+  { id: 'a4', turma_id: 't-es2', dia_semana: 2, inicio: '20:50', fim: '22:30', sala: 'Lab. 3' },
+  { id: 'a5', turma_id: 't-bd', dia_semana: 3, inicio: '19:00', fim: '22:30', sala: 'Lab. 2' },
+  { id: 'a6', turma_id: 't-ihc', dia_semana: 4, inicio: '19:00', fim: '20:40', sala: 'Sala 5' },
+  { id: 'a7', turma_id: 't-soc', dia_semana: 4, inicio: '20:50', fim: '22:30', sala: 'Sala 9' },
+  { id: 'a8', turma_id: 't-ihc', dia_semana: 5, inicio: '19:00', fim: '20:40', sala: 'Sala 5' },
+  { id: 'a9', turma_id: 't-est', dia_semana: 5, inicio: '20:50', fim: '22:30', sala: 'Sala 12' },
+]
+
+const NOMES = ['Ana Paula Reis', 'Beatriz Lima', 'Rafael Mendes', 'Júlia Prado', 'Mateus Alves', 'Gabriel Costa', 'Thais Nunes', 'Vinícius Leite', 'Caio Rocha', 'Larissa Dias', 'Pedro Souza']
+const pessoas: Pessoa[] = [
+  { id: DEMO_ID, nome: 'Lucas Tsai', papel: 'admin' },
+  { id: 'p-carlos', nome: 'Prof. Carlos', papel: 'professor' },
+  ...NOMES.map((nome, i) => ({ id: `p${i + 1}`, nome, papel: (i === 0 ? 'representante' : i === 1 ? 'monitor' : 'aluno') as Pessoa['papel'] })),
+]
+
+function ev(e: Partial<Evento> & Pick<Evento, 'id' | 'titulo' | 'inicio'>): Evento {
+  return { escopo: 'pessoal', escopo_id: DEMO_ID, tipo: 'outro', dia_todo: false, origem: 'manual', status: 'oficial', cancelado: false, ...e }
+}
+
+const eventos: Evento[] = [
+  // Pessoais
+  ev({ id: 'e-academia', titulo: 'Academia', inicio: quando(0, '10:00'), fim: quando(0, '11:00'), local: 'Centro' }),
+  ev({ id: 'e-revisar', titulo: 'Revisar POO', tipo: 'leitura', disciplina_id: 'd-poo', inicio: quando(0, '14:00'), fim: quando(0, '16:00'), descricao: 'Plano até a P1 · 2 de 4' }),
+  ev({ id: 'e-churras', titulo: 'Churrasco da turma', inicio: quando(6, '15:00'), fim: quando(6, '18:00'), local: 'Casa do Rafael' }),
+  ev({ id: 'e-trabalho', titulo: 'Trabalho', origem: 'importado', inicio: quando(1, '08:00'), fim: quando(1, '17:00'), rrule: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR' }),
+  ev({ id: 'e-sug', titulo: 'Estudar Estatística', tipo: 'leitura', disciplina_id: 'd-est', origem: 'yara', status: 'provavel', inicio: quando(6, '10:00'), fim: quando(6, '12:00'), descricao: 'Sugestão da Yara · 2 h livres antes da P1' }),
+  // Turma
+  ev({ id: 'e-p1poo', escopo: 'turma', escopo_id: 't-poo', disciplina_id: 'd-poo', titulo: 'P1 · POO', tipo: 'prova', origem: 'professor', inicio: quando(2, '19:00', 1), fim: quando(2, '20:40', 1), local: 'Sala 7', descricao: 'Classes, herança e polimorfismo · vale 40% da média' }),
+  ev({ id: 'e-lista3', escopo: 'turma', escopo_id: 't-est', disciplina_id: 'd-est', titulo: 'Lista 3 · Estatística', tipo: 'entrega', origem: 'turma', status: 'confirmado_turma', inicio: quando(5, '23:59'), dia_todo: true }),
+  ev({ id: 'e-ihc-canc', escopo: 'turma', escopo_id: 't-ihc', disciplina_id: 'd-ihc', titulo: 'IHC · aula cancelada', tipo: 'aula', origem: 'yara', cancelado: true, inicio: quando(5, '19:00'), fim: quando(5, '20:40'), documento_url: 'https://www.fatecid.com.br/site/' }),
+  ev({ id: 'e-sprint', escopo: 'turma', escopo_id: 't-es2', disciplina_id: 'd-es2', titulo: 'Entrega · Sprint 2', tipo: 'entrega', origem: 'professor', inicio: quando(2, '20:50', 2), fim: quando(2, '22:30', 2), descricao: 'Apresentação em grupo · 10 min' }),
+  // Fatec
+  ev({ id: 'e-monitoria', escopo: 'unidade', escopo_id: null, titulo: 'Inscrições Monitoria 2027/1', tipo: 'data_especial', origem: 'yara', dia_todo: true, inicio: quando(1, '00:00'), fim: quando(5, '23:59'), documento_url: 'https://www.fatecid.com.br/site/editais/' }),
+  ev({ id: 'e-aacc', escopo: 'curso', escopo_id: CURSO, titulo: 'Prazo AACC', tipo: 'entrega', origem: 'yara', dia_todo: true, inicio: quando(4, '00:00') }),
+  ev({ id: 'e-feriado', escopo: 'unidade', escopo_id: null, titulo: 'Feriado · Consciência Negra', tipo: 'data_especial', origem: 'importado', dia_todo: true, inicio: '2026-11-20T03:00:00.000Z', documento_url: 'https://www.fatecid.com.br/site/calendario-academico/' }),
+]
+
+const propostas: Proposta[] = [
+  {
+    id: 'pr-p1est',
+    turma_id: 't-est',
+    tipo: 'novo_evento',
+    titulo: 'A P1 de Estatística vai ser na quinta, 19:00?',
+    dados: { titulo: 'P1 · Estatística', tipo: 'prova', inicio: quando(4, '19:00', 1), fim: quando(4, '20:40', 1), local: 'Sala 12' },
+    origem: 'yara',
+    trecho_origem: '“o carlos falou na aula que a P1 vai pra quinta, mesmo horário”',
+    status: 'nao_confirmado',
+    criado_por: 'p3',
+    criado_em: quando(1, '21:10'),
+    expira_em: somarDias(new Date(), 2.5).toISOString(),
+  },
+  {
+    id: 'pr-dupla',
+    turma_id: 't-est',
+    tipo: 'outro',
+    titulo: 'O trabalho em dupla vale 3 pontos?',
+    dados: {},
+    origem: 'turma',
+    status: 'descartado',
+    criado_por: 'p5',
+    criado_em: quando(0, '20:00', -1),
+    expira_em: quando(3, '20:00', -1),
+  },
+]
+
+const votos: Voto[] = [
+  ...['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8'].map((u) => ({ proposta_id: 'pr-p1est', usuario_id: u, valor: 'sim' as const })),
+  { proposta_id: 'pr-p1est', usuario_id: 'p9', valor: 'nao' },
+  ...['p1', 'p2', 'p3'].map((u) => ({ proposta_id: 'pr-dupla', usuario_id: u, valor: 'sim' as const })),
+  ...['p4', 'p5', 'p6', 'p7', 'p8', 'p9', 'p10', 'p11'].map((u) => ({ proposta_id: 'pr-dupla', usuario_id: u, valor: 'nao' as const })),
+]
+
+const mensagens: Mensagem[] = [
+  { id: 'm1', turma_id: 't-est', canal: 'avisos', autor_id: 'p-carlos', texto: 'Slides da aula 7 (distribuição normal) publicados em Materiais.', fixada: true, criado_em: quando(1, '18:10') },
+  { id: 'm2', turma_id: 't-est', canal: 'geral', autor_id: 'p2', texto: 'Monitoria de hoje confirmada, sala 4 às 18h.', fixada: false, criado_em: quando(1, '18:42') },
+  { id: 'm3', turma_id: 't-est', canal: 'geral', autor_id: 'p3', texto: 'Gente, o Carlos falou na aula que a P1 vai pra quinta, mesmo horário.', fixada: false, criado_em: quando(1, '21:05') },
+  { id: 'm4', turma_id: 't-est', canal: 'geral', autor_id: 'p1', texto: 'Criei a confirmação na aba Confirmações, votem lá!', fixada: false, criado_em: quando(1, '21:12') },
+]
+
+const reacoes: Reacao[] = [
+  ...['p1', 'p2', 'p4', 'p5', 'p6'].map((u) => ({ alvo_tipo: 'mensagem' as const, alvo_id: 'm1', usuario_id: u, emoji: '👍' })),
+  ...['p7', 'p8'].map((u) => ({ alvo_tipo: 'mensagem' as const, alvo_id: 'm1', usuario_id: u, emoji: '🙏' })),
+  ...['p4', 'p6'].map((u) => ({ alvo_tipo: 'mensagem' as const, alvo_id: 'm4', usuario_id: u, emoji: '✅' })),
+]
+
+const duvidas: Duvida[] = [
+  { id: 'dv1', turma_id: 't-est', autor_id: 'p6', texto: 'Na distribuição normal, quando uso a tabela Z e quando uso a t de Student?', resolvida: true, criado_em: quando(1, '22:40') },
+  { id: 'dv2', turma_id: 't-poo', autor_id: 'p4', texto: 'Classe abstrata pode ter construtor?', resolvida: false, criado_em: quando(2, '21:00') },
+]
+const respostas: Resposta[] = [
+  { id: 'r1', duvida_id: 'dv1', autor_id: 'p2', texto: 'Use t quando a variância da população é desconhecida e a amostra é pequena (n < 30). Está no slide 14 da aula 7.', fontes: [{ titulo: 'Aula 7 · Distribuição normal (slides)' }], confirmada_por: 'p-carlos', criado_em: quando(1, '23:02') },
+]
+
+const materiais: Material[] = [
+  { id: 'mt1', dono_id: 'p-carlos', turma_id: 't-est', disciplina_id: 'd-est', tipo: 'link', titulo: 'Aula 7 · Distribuição normal (slides)', url: 'https://www.fatecid.com.br/site/', semana: 7, na_entrada: false, status_revisao: 'estudar_depois', oficial: true, criado_em: quando(1, '18:00') },
+  { id: 'mt2', dono_id: DEMO_ID, turma_id: null, disciplina_id: 'd-poo', tipo: 'anotacao', titulo: 'Resumo · polimorfismo', conteudo: 'Sobrecarga = mesmo nome, parâmetros diferentes (compilação). Sobrescrita = subclasse redefine (execução).', semana: 8, na_entrada: false, status_revisao: 'estudar_depois', oficial: false, criado_em: quando(0, '15:00') },
+  { id: 'mt3', dono_id: DEMO_ID, turma_id: null, disciplina_id: 'd-poo', tipo: 'link', titulo: 'Repositório de exemplos da aula', url: 'https://github.com/', semana: 8, na_entrada: false, status_revisao: 'ja_revisei', oficial: false, criado_em: quando(0, '15:30') },
+  { id: 'mt4', dono_id: DEMO_ID, turma_id: null, disciplina_id: null, tipo: 'anotacao', titulo: 'Foto do quadro · ES II', conteudo: 'Diagrama de sequência do caso de uso “Sacar”.', na_entrada: true, status_revisao: 'estudar_depois', oficial: false, criado_em: quando(2, '22:35') },
+]
+
+const tarefas: Tarefa[] = [
+  { id: 'tk1', usuario_id: DEMO_ID, titulo: 'Lista 3 de Estatística', coluna: 'fazendo', ordem: 1, prazo: quando(5, '12:00').slice(0, 10), disciplina_id: 'd-est', subtarefas: [{ texto: 'Exercícios 1–5', feita: true }, { texto: 'Exercícios 6–10', feita: false }], criado_em: agora },
+  { id: 'tk2', usuario_id: DEMO_ID, titulo: 'Sprint 2 · diagrama de classes', coluna: 'a_fazer', ordem: 1, prazo: quando(2, '12:00', 2).slice(0, 10), disciplina_id: 'd-es2', subtarefas: [], criado_em: agora },
+  { id: 'tk3', usuario_id: DEMO_ID, titulo: 'Entregar horas de AACC', coluna: 'a_fazer', ordem: 2, prazo: quando(4, '12:00').slice(0, 10), disciplina_id: null, subtarefas: [], criado_em: agora },
+  { id: 'tk4', usuario_id: DEMO_ID, titulo: 'Resumo de polimorfismo', coluna: 'feito', ordem: 1, prazo: null, disciplina_id: 'd-poo', subtarefas: [], criado_em: agora },
+]
+
+const hoje = new Date().toISOString().slice(0, 10)
+const revisao: ItemRevisao[] = [
+  { id: 'rv1', usuario_id: DEMO_ID, disciplina_id: 'd-poo', pergunta: 'Qual a diferença entre sobrecarga e sobrescrita?', resposta: 'Sobrecarga: mesmo nome, parâmetros diferentes (compilação). Sobrescrita: a subclasse redefine o método (execução).', proxima_em: hoje, intervalo_dias: 1, facilidade: 2.5, repeticoes: 1 },
+  { id: 'rv2', usuario_id: DEMO_ID, disciplina_id: 'd-est', pergunta: 'Quando usar a distribuição t de Student?', resposta: 'Quando a variância da população é desconhecida e a amostra é pequena.', proxima_em: hoje, intervalo_dias: 3, facilidade: 2.4, repeticoes: 2 },
+  { id: 'rv3', usuario_id: DEMO_ID, disciplina_id: 'd-ihc', pergunta: 'Cite 3 heurísticas de Nielsen.', resposta: 'Visibilidade do status, controle e liberdade do usuário, prevenção de erros.', proxima_em: somarDias(new Date(), 2).toISOString().slice(0, 10), intervalo_dias: 6, facilidade: 2.6, repeticoes: 3 },
+]
+
+const avaliacoes: Avaliacao[] = [
+  { id: 'av1', turma_id: 't-poo', nome: 'P1', peso: 4 },
+  { id: 'av2', turma_id: 't-poo', nome: 'P2', peso: 4 },
+  { id: 'av3', turma_id: 't-poo', nome: 'Trabalho', peso: 2 },
+  { id: 'av4', turma_id: 't-est', nome: 'P1', peso: 5 },
+  { id: 'av5', turma_id: 't-est', nome: 'P2', peso: 5 },
+]
+const notas: Nota[] = [{ usuario_id: DEMO_ID, avaliacao_id: 'av3', valor: 8.5 }]
+const frequencia: Frequencia[] = [
+  { usuario_id: DEMO_ID, turma_id: 't-poo', data: quando(1, '19:00', -1).slice(0, 10), presente: true, aulas: 2 },
+  { usuario_id: DEMO_ID, turma_id: 't-poo', data: quando(2, '19:00', -1).slice(0, 10), presente: false, aulas: 2 },
+  { usuario_id: DEMO_ID, turma_id: 't-est', data: quando(1, '20:50', -1).slice(0, 10), presente: true, aulas: 2 },
+]
+
+const fontes: Fonte[] = [
+  { id: 'f1', tenant_id: TENANT, nome: 'Home do site', url: 'https://www.fatecid.com.br/site/', tipo: 'pagina', frequencia_min: 30, status: 'ativa' },
+  { id: 'f2', tenant_id: TENANT, nome: 'Calendário Acadêmico', url: 'https://www.fatecid.com.br/site/calendario-academico/', tipo: 'pdf', frequencia_min: 60, status: 'ativa' },
+  { id: 'f3', tenant_id: TENANT, nome: 'Grade de Horários e Salas', url: 'https://www.fatecid.com.br/site/grade-de-horarios-e-salas/', tipo: 'pagina', frequencia_min: 60, status: 'ativa' },
+  { id: 'f4', tenant_id: TENANT, nome: 'Editais', url: 'https://www.fatecid.com.br/site/editais/', tipo: 'pagina', frequencia_min: 120, status: 'ativa' },
+]
+
+const preferencias: AgendaPreferencias = {
+  usuario_id: DEMO_ID,
+  camadas_ocultas: [],
+  lembretes_padrao: { prova: [1440, 120], entrega: [2880, 180], aula: [15], outro: [30] },
+  hora_inicio: 8,
+  hora_fim: 23,
+  mostrar_sugestoes: true,
+  mostrar_propostas: true,
+  ics_token: 'demonstracao',
+}
+
+const cursos: Curso[] = [{ id: CURSO, tenant_id: TENANT, nome: 'Análise e Desenvolvimento de Sistemas', sigla: 'ADS', semestres: 6 }]
+
+export const demo = {
+  tenant,
+  perfil,
+  cursos,
+  disciplinas,
+  turmas,
+  matriculas: turmas.map((t) => ({ usuario_id: DEMO_ID, turma_id: t.id, papel_turma: 'aluno' as const })),
+  aulas,
+  pessoas,
+  eventos,
+  propostas,
+  votos,
+  mensagens,
+  reacoes,
+  duvidas,
+  respostas,
+  materiais,
+  tarefas,
+  revisao,
+  avaliacoes,
+  notas,
+  frequencia,
+  fontes,
+  preferencias,
+}
+
+/** Simula a latência da rede para os estados de carregamento aparecerem. */
+export function espera<T>(valor: T, ms = 120): Promise<T> {
+  return new Promise((r) => setTimeout(() => r(structuredClone(valor)), ms))
+}

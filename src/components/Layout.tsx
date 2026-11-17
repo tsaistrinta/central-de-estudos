@@ -1,29 +1,42 @@
+import { Suspense } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import AppSidebar from './AppSidebar'
 import AppRail from './AppRail'
+import NavCelular from './NavCelular'
 
-// Na Agenda a sidebar vira trilho de ícones e o conteúdo ocupa a tela toda (padrão Outlook).
+// Desktop: sidebar de 224 px (na Agenda vira trilho de 68 px, padrão Outlook).
+// Celular: sem sidebar, com barra inferior.
 export default function Layout() {
   const { pathname } = useLocation()
   const telaCheia = pathname.startsWith('/agenda')
 
   if (telaCheia) {
     return (
-      <div className="h-screen">
-        <AppRail />
-        <main className="ml-[68px] h-full bg-card">
-          <Outlet />
+      <div className="h-dvh">
+        <div className="hidden md:block">
+          <AppRail />
+        </div>
+        <main className="h-full bg-card pb-[62px] md:ml-[68px] md:pb-0">
+          <Suspense fallback={null}>
+            <Outlet />
+          </Suspense>
         </main>
+        <NavCelular />
       </div>
     )
   }
 
   return (
     <div className="min-h-screen">
-      <AppSidebar />
-      <main className="ml-56 px-8 py-[22px]">
-        <Outlet />
+      <div className="hidden md:block">
+        <AppSidebar />
+      </div>
+      <main className="px-4 pt-5 pb-24 md:ml-56 md:px-8 md:py-[22px]">
+        <Suspense fallback={<div className="text-sm text-muted-foreground">Carregando…</div>}>
+          <Outlet />
+        </Suspense>
       </main>
+      <NavCelular />
     </div>
   )
 }
