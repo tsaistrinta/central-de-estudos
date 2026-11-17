@@ -125,7 +125,7 @@ begin
     campos := c.dados -> 'campos';
     select * into antes from eventos where id = c.item_id;
     if not found then raise exception 'evento_nao_encontrado'; end if;
-    if antes.origem not in ('archie', 'importado') then raise exception 'evento_nao_e_da_archie'; end if;
+    if antes.origem not in ('archie', 'importado') then raise exception 'evento_nao_e_do_archie'; end if;
     update eventos set
       titulo = coalesce(campos ->> 'titulo', titulo),
       inicio = coalesce((campos ->> 'inicio')::timestamptz, inicio),
