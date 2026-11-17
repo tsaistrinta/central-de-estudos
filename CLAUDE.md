@@ -29,6 +29,7 @@ PTG de ADS da **Fatec Indaiatuba** (autor: Lucas Tsai). Plataforma de estudos qu
 - **Validação coletiva:** base = vagas da turma no site (`turmas.tamanho_real`) ou, se nulo, membros da turma. Confirma com sim ≥ max(5, 25% da base) **e** sim ≥ 80% dos votos. Descarta se não > 50% com quórum ou após 72 h. Professor ou fonte oficial fecham na hora. Só alunos matriculados votam; votos visíveis (avatares, clique mostra a lista).
 - **Reações:** um componente único com lista de quem reagiu (mural, conversa, dúvidas, materiais).
 - **Sem WhatsApp/Telegram** por enquanto: toda conversa acontece dentro da Central.
+- **Archie só trata da vida acadêmica na Fatec** (aulas, calendário, provas, secretaria, PTG, estágio, conteúdo das disciplinas); fora disso recusa em uma frase. Segue a LGPD: não lê nem expõe dados pessoais de terceiros, modelo só local, nada vai para IA de terceiros. Detalhes e migração para o servidor da Fatec: doc "Archie · Migração para o servidor da Fatec e políticas de uso" (https://claude.ai/artifact/P5ryQ8vk592BT6QZXXbDWQ).
 
 ### Papéis
 Aluno (padrão) · Monitor · Representante · Professor (aprovado pelo admin) · Admin (Lucas, dono da plataforma). Cada instituição/unidade é um **tenant** isolado.
