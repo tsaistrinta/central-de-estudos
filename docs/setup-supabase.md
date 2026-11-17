@@ -21,7 +21,7 @@ O schema novo substitui o do app pessoal antigo (cursos/semestres/documentos).
    alter default privileges in schema public grant all on tables to postgres, anon, authenticated, service_role;
    alter default privileges in schema public grant all on functions to postgres, anon, authenticated, service_role;
    alter default privileges in schema public grant all on sequences to postgres, anon, authenticated, service_role;
-   drop trigger if exists ao_criar_usuario on auth.users;
+   drop trigger if exists central_criar_perfil on auth.users;
    ```
 2. **Authentication → Users**: apague os usuários de teste antigos (eles não têm perfil no schema novo).
 

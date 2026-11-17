@@ -144,7 +144,7 @@ begin
   return new;
 end $$;
 
-create trigger ao_criar_usuario after insert on auth.users
+create trigger central_criar_perfil after insert on auth.users
   for each row execute function public.criar_perfil();
 
 -- Nomes visíveis para colegas do mesmo tenant (sem e-mail): votos, conversa, membros.

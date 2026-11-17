@@ -91,7 +91,7 @@ Pré-requisitos: **Node.js LTS** e **Git**.
 
 ```bash
 # 1. clonar o repositório
-git clone https://github.com/<seu-usuario>/central-de-estudos.git
+git clone https://github.com/tsaistrinta/central-de-estudos.git
 cd central-de-estudos
 
 # 2. instalar as dependências
@@ -111,9 +111,11 @@ O app sobe em `http://localhost:5173`.
 
 Fases 0 a 5 prontas no código (base visual, contas por código, agenda estilo Outlook, espaço pessoal, comunidade e validação coletiva, Archie v1 lendo calendário, grade de horários e avisos do site). Próximas: ligar o Supabase (`docs/setup-supabase.md`) e o Archie (`docs/archie.md`) → 6 · Archie v2 → 7 · painel admin → 8 · piloto com a turma → 9 · avaliação do PTG. Detalhes em `CLAUDE.md`.
 
-## Autor
+## Equipe
 
-**Lucas T. Strinta** — Análise e Desenvolvimento de Sistemas (FATEC).
+| Integrante | Papel |
+|---|---|
+| **Lucas T. Strinta** | Desenvolvimento, produto e PTG — Análise e Desenvolvimento de Sistemas, Fatec Indaiatuba |
 
 ## Licença
 
