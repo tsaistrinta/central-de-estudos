@@ -292,3 +292,38 @@ def test_excluir_conta_apaga_o_pessoal_e_anonimiza_o_da_turma(url, db, pessoas):
 def test_ultimo_admin_nao_se_exclui(url, pessoas):  # noqa: F811
     with como(url, pessoas["admin"]) as c:
         falha(c, "select excluir_minha_conta('EXCLUIR')", contem="ultimo_admin")
+
+
+# ------------------------------------------------------------------ edições não mudam onde a coisa aparece
+
+def test_editar_nao_move_nem_promove_o_que_e_meu(url, db, pessoas):  # noqa: F811
+    ana = pessoas["ana"]
+    with como(url, ana) as c:
+        msg = c.execute("insert into mensagens (turma_id, canal, autor_id, texto) values (%s, 'geral', %s, 'oi') returning id",
+                        (TURMA_POO, ana)).fetchone()["id"]
+        falha(c, "update mensagens set canal = 'avisos' where id = %s", (msg,), contem="nao_pode_mudar")  # aviso falso
+        falha(c, "update mensagens set turma_id = %s where id = %s", (TURMA_EST, msg), contem="nao_pode_mudar")
+        c.execute("update mensagens set texto = 'oi, corrigido' where id = %s", (msg,))  # editar o texto pode
+
+        mat = c.execute("insert into materiais (dono_id, tipo, titulo) values (%s, 'anotacao', 'Meu') returning id",
+                        (ana,)).fetchone()["id"]
+        falha(c, "update materiais set turma_id = %s where id = %s", (TURMA_EST, mat), contem="nao_pode_mudar")
+        falha(c, "update materiais set oficial = true where id = %s", (mat,), contem="nao_pode_mudar")
+        c.execute("update materiais set turma_id = %s where id = %s", (TURMA_POO, mat))  # compartilhar com a própria turma
+
+        duv = c.execute("insert into duvidas (turma_id, autor_id, texto) values (%s, %s, '?') returning id",
+                        (TURMA_POO, ana)).fetchone()["id"]
+        falha(c, "update duvidas set turma_id = %s where id = %s", (TURMA_EST, duv), contem="nao_pode_mudar")
+
+        p1 = c.execute("""insert into propostas (turma_id, tipo, titulo, dados, origem, criado_por)
+                          values (%s, 'novo_evento', 'P1', '{}'::jsonb, 'turma', %s) returning id""", (TURMA_POO, ana)).fetchone()["id"]
+        c.execute("insert into votos (proposta_id, usuario_id, valor) values (%s, %s, 'sim')", (p1, ana))
+    # Uma votação de outra turma, onde a Ana não está.
+    p2 = db.execute("""insert into propostas (turma_id, tipo, titulo, dados, origem)
+                       values (%s, 'novo_evento', 'Outra', '{}'::jsonb, 'turma') returning id""", (TURMA_EST,)).fetchone()["id"]
+    with como(url, ana) as c:
+        falha(c, "update votos set proposta_id = %s where proposta_id = %s", (p2, p1), contem="nao_pode_mudar")
+    # O professor da turma continua podendo fixar e moderar.
+    with como(url, pessoas["prof"]) as c:
+        c.execute("update mensagens set fixada = true where id = %s", (msg,))
+        c.execute("update materiais set oficial = true where id = %s", (mat,))
