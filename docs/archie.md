@@ -75,6 +75,10 @@ Se o worker estiver desligado, os envios esperam (o admin pode liberar ou remove
 
 **Precisa no `.env` do worker:** `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` (só no PC do worker, nunca no git).
 
+## Na nuvem (sempre ligado)
+
+Para rodar sem o PC, na Oracle Cloud grátis: veja **[archie-oracle.md](archie-oracle.md)**.
+
 ## Ligar (uma vez)
 
 Pré-requisito: o Supabase do `docs/setup-supabase.md` já ligado.

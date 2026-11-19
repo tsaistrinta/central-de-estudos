@@ -22,7 +22,7 @@ from archie.config import Config
 def _ia(cfg: Config):
     from archie.ia import Ollama
 
-    return Ollama(cfg.ollama_url, cfg.modelo, cfg.modelo_embed)
+    return Ollama(cfg.ollama_url, cfg.modelo, cfg.modelo_embed, timeout=cfg.ia_timeout_s)
 
 
 def _coletor(cfg: Config):

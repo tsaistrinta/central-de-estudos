@@ -29,6 +29,7 @@ def _bool(nome: str, padrao: bool) -> bool:
 class Config:
     database_url: str | None
     ollama_url: str
+    ia_timeout_s: float  # máquina só com processador (Oracle grátis) precisa de mais tempo por leitura
     modelo: str  # texto + imagem
     modelo_embed: str
     user_agent: str
@@ -54,6 +55,7 @@ class Config:
         return cls(
             database_url=e("DATABASE_URL"),
             ollama_url=e("OLLAMA_URL", "http://localhost:11434").rstrip("/"),
+            ia_timeout_s=float(e("ARCHIE_IA_TIMEOUT_S", "600")),
             modelo=e("ARCHIE_MODELO", "qwen3.5:9b"),
             modelo_embed=e("ARCHIE_MODELO_EMBED", "qwen3-embedding:0.6b"),
             user_agent=e("ARCHIE_USER_AGENT",

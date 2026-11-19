@@ -1,0 +1,52 @@
+# Archie na Oracle Cloud "Always Free" (máquina Ampere A1, ARM, só processador).
+# Tudo numa máquina só, sempre ligada, sem o PC do Lucas: Ollama (modelo local) + worker.
+# Uso (na pasta workers/archie):  docker compose -f deploy/oracle/docker-compose.yml up -d --build
+# Nenhuma porta é aberta para a internet: o worker só faz conexões de saída (banco e site da Fatec).
+name: archie
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    restart: always
+    volumes:
+      - modelos:/root/.ollama
+    environment:
+      OLLAMA_KEEP_ALIVE: "-1"          # modelo fica carregado: leitura mais rápida (e a máquina nunca fica "ociosa")
+      OLLAMA_NUM_PARALLEL: "1"         # 2 núcleos: uma leitura por vez
+      OLLAMA_MAX_LOADED_MODELS: "2"    # o de texto/imagem e o de embedding
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
+  # Baixa os modelos uma vez (fica no volume "modelos") e sai.
+  modelos:
+    image: ollama/ollama:latest
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["/bin/sh", "-c", "ollama pull ${ARCHIE_MODELO:-qwen3.5:9b} && ollama pull ${ARCHIE_MODELO_EMBED:-qwen3-embedding:0.6b}"]
+    restart: "no"
+
+  archie:
+    build: ../..
+    restart: always
+    env_file: ../../.env
+    environment:
+      OLLAMA_URL: http://ollama:11434
+      ARCHIE_IA_TIMEOUT_S: "1800"      # sem placa de vídeo, uma página de grade pode levar alguns minutos
+      ARCHIE_WORKER: oracle-a1
+    depends_on:
+      ollama:
+        condition: service_healthy
+      modelos:
+        condition: service_completed_successfully
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+volumes:
+  modelos:
