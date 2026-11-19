@@ -6,6 +6,7 @@ import { apagarItemRevisao, criarItemRevisao, listarRevisao, proximaRevisao, res
 import { Cabecalho, Cartao, Esqueleto, PontoMateria, Vazio } from '@/components/foco/Base'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { plural } from '@/lib/texto'
 import type { ItemRevisao } from '@/types'
 
 // Tela 05 · Revisão espaçada: cartões de pergunta e resposta que voltam no dia certo.
@@ -58,7 +59,7 @@ export default function Revisar() {
 
   return (
     <div className="space-y-4">
-      <Cabecalho titulo="Revisão" descricao={`${fila.length} cartão(ões) para hoje · ${futuros.length} agendados`} />
+      <Cabecalho titulo="Revisão" descricao={`${plural(fila.length, 'cartão', 'cartões')} para hoje · ${plural(futuros.length, 'agendado')}`} />
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
         <Cartao>
           {itens.isLoading ? (

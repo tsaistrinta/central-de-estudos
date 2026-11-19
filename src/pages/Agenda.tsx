@@ -13,6 +13,7 @@ import PainelCalendarios from '@/components/agenda/PainelCalendarios'
 import Calendario from '@/components/agenda/Calendario'
 import CartaoEvento from '@/components/agenda/CartaoEvento'
 import NovoEvento, { type ModoNovoEvento } from '@/components/agenda/NovoEvento'
+import { plural } from '@/lib/texto'
 import { useDadosAgenda } from '@/components/agenda/useDadosAgenda'
 
 // Telas 20–26 · Agenda no padrão Outlook com a identidade Foco.
@@ -176,9 +177,9 @@ export default function Agenda() {
               </span>
               <p className="text-xs leading-relaxed text-muted-foreground">
                 {[
-                  resumo.canceladas && <b key="c" className="text-foreground">{resumo.canceladas} cancelada(s)</b>,
-                  resumo.propostas && <b key="p" className="text-foreground">{resumo.propostas} data(s) esperando a turma</b>,
-                  sugestoes && <b key="s" className="text-foreground">{sugestoes} sugestão(ões) de estudo</b>,
+                  resumo.canceladas && <b key="c" className="text-foreground">{plural(resumo.canceladas, 'cancelada')}</b>,
+                  resumo.propostas && <b key="p" className="text-foreground">{plural(resumo.propostas, 'data')} esperando a turma</b>,
+                  sugestoes && <b key="s" className="text-foreground">{plural(sugestoes, 'sugestão', 'sugestões')} de estudo</b>,
                 ]
                   .filter(Boolean)
                   .flatMap((n, i) => (i ? [' · ', n] : [n]))}

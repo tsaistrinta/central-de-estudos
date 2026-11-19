@@ -6,6 +6,7 @@ import { apagarAvaliacao, avaliacoesDasTurmas, criarAvaliacao, minhaFrequencia, 
 import { Cabecalho, Cartao, Esqueleto, PontoMateria } from '@/components/foco/Base'
 import { useDadosAgenda } from '@/components/agenda/useDadosAgenda'
 import { cn } from '@/lib/utils'
+import { plural } from '@/lib/texto'
 import type { Avaliacao, MinhaTurma, Nota } from '@/types'
 
 // Tela 07 · Notas e faltas. Controle pessoal: o oficial continua sendo o SIGA.
@@ -127,7 +128,7 @@ function CartaoTurma({ t, avaliacoes, notas, aulasPrevistas, faltas }: { t: Minh
               <div className={cn('h-full rounded-full', freq < 0.8 ? 'bg-destructive' : 'bg-success')} style={{ width: `${Math.round(freq * 100)}%` }} />
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              <b className="text-foreground">{faltas}</b> falta(s) de {aulasPrevistas} aulas · pode faltar mais <b className={cn(podeFaltar <= 2 ? 'text-destructive' : 'text-foreground')}>{podeFaltar}</b>
+              <b className="text-foreground">{plural(faltas, 'falta')}</b> de {plural(aulasPrevistas, 'aula')} · pode faltar mais <b className={cn(podeFaltar <= 2 ? 'text-destructive' : 'text-foreground')}>{podeFaltar}</b>
             </p>
           </div>
         </div>

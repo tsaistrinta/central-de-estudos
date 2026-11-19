@@ -10,16 +10,12 @@ import { useDadosAgenda } from '@/components/agenda/useDadosAgenda'
 import { listarPropostas, votosDe } from '@/api/comunidade'
 import { listarRevisao, listarTarefas } from '@/api/espaco'
 import { meuIdSincrono } from '@/lib/identidade'
+import { plural, prazoRelativo, saudacao } from '@/lib/texto'
 import { inicioDoDia, somarDias } from '@/lib/datas'
 import { cn } from '@/lib/utils'
 
 // Tela 03 · Hoje: o resumo do dia montado com o que a Central já sabe.
 
-function saudacao(hora: number) {
-  if (hora < 12) return 'Bom dia'
-  if (hora < 18) return 'Boa tarde'
-  return 'Boa noite'
-}
 const hhmm = (d: Date) => d.toTimeString().slice(0, 5)
 
 export default function Hoje() {
@@ -77,7 +73,7 @@ export default function Hoje() {
           <SeloArchie />
         </div>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-          Hoje você tem <b className="text-foreground">{deHoje.filter((i) => i.tipo === 'aula').length} aula(s)</b>
+          Hoje você tem <b className="text-foreground">{plural(deHoje.filter((i) => i.tipo === 'aula').length, 'aula')}</b>
           {importantes.length > 0 && (
             <>
               . A próxima avaliação é <b className="text-foreground">{importantes[0].titulo.replace(/\?$/, '')}</b>,{' '}
@@ -86,12 +82,12 @@ export default function Hoje() {
           )}
           {semVoto.length > 0 && (
             <>
-              . <b className="text-foreground">{semVoto.length} confirmação(ões)</b> esperam o seu voto
+              . <b className="text-foreground">{plural(semVoto.length, 'confirmação', 'confirmações')}</b> {semVoto.length === 1 ? 'espera' : 'esperam'} o seu voto
             </>
           )}
           {paraRevisar > 0 && (
             <>
-              {' '}e <b className="text-foreground">{paraRevisar} item(ns)</b> de revisão vencem hoje
+              {' '}e <b className="text-foreground">{plural(paraRevisar, 'item', 'itens')}</b> de revisão {paraRevisar === 1 ? 'vence' : 'vencem'} hoje
             </>
           )}
           .
@@ -119,7 +115,7 @@ export default function Hoje() {
           ) : (
             <ul className="px-4 pb-3">
               {deHoje.map((i) => (
-                <li key={i.id} className="flex items-center gap-3 border-b border-muted py-2.5 last:border-0">
+                <li key={i.id} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-muted py-2.5 last:border-0">
                   <span className="w-[86px] font-mono text-xs text-muted-foreground">
                     {hhmm(i.inicio)}–{hhmm(i.fim)}
                   </span>
@@ -150,15 +146,18 @@ export default function Hoje() {
           ) : (
             <ul className="px-4 pb-3">
               {importantes.map((i) => (
-                <li key={i.id} className="flex items-center gap-3 border-b border-muted py-2.5 last:border-0">
-                  <span className="w-[74px] font-mono text-xs text-muted-foreground">{i.inicio.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })}</span>
+                <li key={i.id} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-muted py-2.5 last:border-0">
+                  <span className="w-[86px] shrink-0 font-mono text-xs whitespace-nowrap text-muted-foreground">{i.inicio.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' })}</span>
                   {i.estilo === 'prova' && <EtiquetaEvento tipo="prova" />}
                   {i.estilo === 'entrega' && <EtiquetaEvento tipo="entrega" />}
-                  <span className="min-w-0 flex-1 truncate text-sm font-medium">{i.titulo}</span>
-                  {i.tipo === 'proposta' && <SeloStatus status="nao_confirmado" />}
-                  {i.evento?.status && i.evento.escopo !== 'pessoal' && <SeloStatus status={i.evento.status} />}
-                  <LinkFonte url={i.evento?.documento_url} rotulo="Fonte" className="hidden md:inline-flex" />
-                  <span className="text-[11.5px] text-muted-foreground">em {Math.max(0, Math.ceil((i.inicio.getTime() - agora.getTime()) / 864e5))} d</span>
+                  <span className="min-w-[55%] flex-1 truncate text-sm font-medium sm:min-w-0">{i.titulo}</span>
+                  {/* No celular, selo, fonte e prazo descem para a linha de baixo em vez de espremer o título. */}
+                  <span className="ml-auto flex shrink-0 items-center gap-2">
+                    {i.tipo === 'proposta' && <SeloStatus status="nao_confirmado" />}
+                    {i.evento?.status && i.evento.escopo !== 'pessoal' && <SeloStatus status={i.evento.status} />}
+                    <LinkFonte url={i.evento?.documento_url} rotulo="Fonte" className="hidden md:inline-flex" />
+                    <span className="text-[11.5px] whitespace-nowrap text-muted-foreground">{prazoRelativo(i.inicio, agora)}</span>
+                  </span>
                 </li>
               ))}
             </ul>

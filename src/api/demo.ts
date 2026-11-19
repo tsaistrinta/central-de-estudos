@@ -96,16 +96,16 @@ const disciplinas: Disciplina[] = [
 ]
 
 const professores: Record<string, string> = {
-  'd-poo': 'Prof. Furgeri',
-  'd-est': 'Prof. Carlos',
-  'd-es2': 'Prof. Marlon',
-  'd-ihc': 'Prof. Michel',
-  'd-soc': 'Profa. Miriam',
-  'd-bd': 'Prof. Renato',
-  'd-ed': 'Prof. Rodrigo',
-  'd-gp': 'Profa. Sandra',
-  'd-pdm': 'Prof. Felipe',
-  'd-les': 'Prof. Marlon',
+  'd-poo': 'Sérgio Furgeri',
+  'd-est': 'Carlos Dias',
+  'd-es2': 'Marlon',
+  'd-ihc': 'Michel',
+  'd-soc': 'Miriam Urraza',
+  'd-bd': 'Marlon',
+  'd-ed': 'Mome',
+  'd-gp': 'Michel',
+  'd-pdm': 'Felipe',
+  'd-les': 'Marlon',
 }
 
 const turmas: Turma[] = disciplinas.map((d) => ({
@@ -120,22 +120,21 @@ const turmas: Turma[] = disciplinas.map((d) => ({
   horario_pagina: 1,
 }))
 
+// Horários reais da grade oficial (ADS noturno 2026/2, ADS_NOT.pdf), para a demonstração não mostrar horário errado.
 const aulas: AulaHorario[] = [
-  { id: 'a1', turma_id: 't-poo', dia_semana: 1, inicio: '19:00', fim: '20:40', sala: 'Sala 7' },
-  { id: 'a2', turma_id: 't-est', dia_semana: 1, inicio: '20:50', fim: '22:30', sala: 'Sala 12' },
-  { id: 'a3', turma_id: 't-poo', dia_semana: 2, inicio: '19:00', fim: '20:40', sala: 'Sala 7' },
-  { id: 'a4', turma_id: 't-es2', dia_semana: 2, inicio: '20:50', fim: '22:30', sala: 'Lab. 3' },
-  { id: 'a5', turma_id: 't-bd', dia_semana: 3, inicio: '19:00', fim: '22:30', sala: 'Lab. 2' },
-  { id: 'a6', turma_id: 't-ihc', dia_semana: 4, inicio: '19:00', fim: '20:40', sala: 'Sala 5' },
-  { id: 'a7', turma_id: 't-soc', dia_semana: 4, inicio: '20:50', fim: '22:30', sala: 'Sala 9' },
-  { id: 'a8', turma_id: 't-ihc', dia_semana: 5, inicio: '19:00', fim: '20:40', sala: 'Sala 5' },
-  { id: 'a9', turma_id: 't-est', dia_semana: 5, inicio: '20:50', fim: '22:30', sala: 'Sala 12' },
+  { id: 'a1', turma_id: 't-poo', dia_semana: 5, inicio: '19:00', fim: '22:30', sala: 'Lab. 1 / Lab. 3 / Lab. 4' },
+  { id: 'a2', turma_id: 't-est', dia_semana: 6, inicio: '09:30', fim: '13:00', sala: 'Lab. 11' },
+  { id: 'a3', turma_id: 't-es2', dia_semana: 2, inicio: '20:50', fim: '22:30', sala: 'Lab. 11' },
+  { id: 'a4', turma_id: 't-es2', dia_semana: 3, inicio: '19:00', fim: '20:40', sala: 'Lab. 13' },
+  { id: 'a5', turma_id: 't-bd', dia_semana: 4, inicio: '19:00', fim: '22:30', sala: 'Lab. 11' },
+  { id: 'a6', turma_id: 't-ihc', dia_semana: 4, inicio: '20:50', fim: '22:30', sala: 'Lab. 12' },
+  { id: 'a7', turma_id: 't-soc', dia_semana: 1, inicio: '19:00', fim: '20:40', sala: 'Sala 8' },
 ]
 
 const NOMES = ['Ana Paula Reis', 'Beatriz Lima', 'Rafael Mendes', 'Júlia Prado', 'Mateus Alves', 'Gabriel Costa', 'Thais Nunes', 'Vinícius Leite', 'Caio Rocha', 'Larissa Dias', 'Pedro Souza']
 const pessoas: Pessoa[] = [
   { id: DEMO_ID, nome: 'Lucas Tsai', papel: 'admin' },
-  { id: 'p-carlos', nome: 'Prof. Carlos', papel: 'professor' },
+  { id: 'p-carlos', nome: 'Carlos Dias', papel: 'professor' },
   ...NOMES.map((nome, i) => ({ id: `p${i + 1}`, nome, papel: (i === 0 ? 'representante' : i === 1 ? 'monitor' : 'aluno') as Pessoa['papel'] })),
 ]
 
@@ -151,9 +150,9 @@ const eventos: Evento[] = [
   ev({ id: 'e-trabalho', titulo: 'Trabalho', origem: 'importado', inicio: quando(1, '08:00'), fim: quando(1, '17:00'), rrule: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR' }),
   ev({ id: 'e-sug', titulo: 'Estudar Estatística', tipo: 'leitura', disciplina_id: 'd-est', origem: 'archie', status: 'provavel', inicio: quando(6, '10:00'), fim: quando(6, '12:00'), descricao: 'Sugestão do Archie · 2 h livres antes da P1' }),
   // Turma
-  ev({ id: 'e-p1poo', escopo: 'turma', escopo_id: 't-poo', disciplina_id: 'd-poo', titulo: 'P1 · POO', tipo: 'prova', origem: 'professor', inicio: quando(2, '19:00', 1), fim: quando(2, '20:40', 1), local: 'Sala 7', descricao: 'Classes, herança e polimorfismo · vale 40% da média' }),
+  ev({ id: 'e-p1poo', escopo: 'turma', escopo_id: 't-poo', disciplina_id: 'd-poo', titulo: 'P1 · POO', tipo: 'prova', origem: 'professor', inicio: quando(5, '19:00', 1), fim: quando(5, '21:00', 1), local: 'Lab. 1', descricao: 'Classes, herança e polimorfismo · vale 40% da média' }),
   ev({ id: 'e-lista3', escopo: 'turma', escopo_id: 't-est', disciplina_id: 'd-est', titulo: 'Lista 3 · Estatística', tipo: 'entrega', origem: 'turma', status: 'confirmado_turma', inicio: quando(5, '23:59'), dia_todo: true }),
-  ev({ id: 'e-ihc-canc', escopo: 'turma', escopo_id: 't-ihc', disciplina_id: 'd-ihc', titulo: 'IHC · aula cancelada', tipo: 'aula', origem: 'archie', cancelado: true, inicio: quando(5, '19:00'), fim: quando(5, '20:40'), documento_url: 'https://www.fatecid.com.br/site/' }),
+  ev({ id: 'e-ihc-canc', escopo: 'turma', escopo_id: 't-ihc', disciplina_id: 'd-ihc', titulo: 'IHC · aula cancelada', tipo: 'aula', origem: 'archie', cancelado: true, inicio: quando(4, '20:50'), fim: quando(4, '22:30'), documento_url: 'https://www.fatecid.com.br/site/' }),
   ev({ id: 'e-sprint', escopo: 'turma', escopo_id: 't-es2', disciplina_id: 'd-es2', titulo: 'Entrega · Sprint 2', tipo: 'entrega', origem: 'professor', inicio: quando(2, '20:50', 2), fim: quando(2, '22:30', 2), descricao: 'Apresentação em grupo · 10 min' }),
   // Fatec
   ev({ id: 'e-monitoria', escopo: 'unidade', escopo_id: null, titulo: 'Inscrições Monitoria 2027/1', tipo: 'data_especial', origem: 'archie', dia_todo: true, inicio: quando(1, '00:00'), fim: quando(5, '23:59'), documento_url: 'https://www.fatecid.com.br/site/editais/' }),
@@ -166,10 +165,10 @@ const propostas: Proposta[] = [
     id: 'pr-p1est',
     turma_id: 't-est',
     tipo: 'novo_evento',
-    titulo: 'A P1 de Estatística vai ser na quinta, 19:00?',
-    dados: { titulo: 'P1 · Estatística', tipo: 'prova', inicio: quando(4, '19:00', 1), fim: quando(4, '20:40', 1), local: 'Sala 12' },
+    titulo: 'A P1 de Estatística vai ser no sábado, 9:30?',
+    dados: { titulo: 'P1 · Estatística', tipo: 'prova', inicio: quando(6, '09:30', 1), fim: quando(6, '11:30', 1), local: 'Lab. 11' },
     origem: 'archie',
-    trecho_origem: '“o carlos falou na aula que a P1 vai pra quinta, mesmo horário”',
+    trecho_origem: '“o carlos falou na aula que a P1 vai ser no sábado, no horário da aula”',
     status: 'nao_confirmado',
     criado_por: 'p3',
     criado_em: quando(1, '21:10'),
