@@ -9,6 +9,7 @@ import ChipLogo from './ChipLogo'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/auth'
 import { sair } from '@/api/auth'
+import { abrirBusca } from '@/lib/busca'
 
 function Contador({ n }: { n?: number }) {
   if (!n) return null
@@ -34,7 +35,8 @@ export default function AppSidebar() {
 
       <button
         className="mt-1 flex h-[34px] items-center gap-2 rounded-md border border-border bg-card px-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted"
-        title="Busca global (em breve)"
+        title="Buscar telas, matérias e arquivos (Ctrl K)"
+        onClick={abrirBusca}
       >
         <Search size={15} strokeWidth={1.75} />
         <span className="flex-1 text-left">Buscar</span>

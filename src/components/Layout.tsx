@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import AppSidebar from './AppSidebar'
 import AppRail from './AppRail'
 import NavCelular from './NavCelular'
+import BuscaGlobal from './BuscaGlobal'
 
 // Desktop: sidebar de 224 px (na Agenda vira trilho de 68 px, padrão Outlook).
 // Celular: sem sidebar, com barra inferior.
@@ -22,6 +23,7 @@ export default function Layout() {
           </Suspense>
         </main>
         <NavCelular />
+        <BuscaGlobal />
       </div>
     )
   }
@@ -37,6 +39,7 @@ export default function Layout() {
         </Suspense>
       </main>
       <NavCelular />
+      <BuscaGlobal />
     </div>
   )
 }

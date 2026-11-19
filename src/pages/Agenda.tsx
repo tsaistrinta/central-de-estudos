@@ -43,7 +43,8 @@ export default function Agenda() {
   const [titulo, setTitulo] = useState('')
   const [busca, setBusca] = useState('')
   const [cartao, setCartao] = useState<{ item: ItemAgenda; x: number; y: number; lado: 'direita' | 'esquerda' } | null>(null)
-  const [modal, setModal] = useState<ModoNovoEvento | null>(null)
+  // ?novo=1 (busca global, "Novo evento na agenda") já abre o formulário.
+  const [modal, setModal] = useState<ModoNovoEvento | null>(() => (params.get('novo') === '1' ? { modo: 'novo' } : null))
 
   const { itens, turmas, preferencias } = useDadosAgenda(de, ate)
   const tenant = useQuery({ queryKey: ['tenant'], queryFn: tenantAtual, staleTime: 30 * 60_000 })

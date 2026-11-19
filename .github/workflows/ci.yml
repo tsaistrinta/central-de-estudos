@@ -1,0 +1,58 @@
+# Testes a cada push e pull request: app (lint, unidade, build, ponta a ponta) e worker do Archie
+# (dupla leitura, publicação e segurança do banco num Postgres 16 de verdade).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npx vitest run
+        env:
+          TZ: America/Sao_Paulo
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test
+        env:
+          CI: 'true'
+
+  archie:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: teste
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    defaults:
+      run:
+        working-directory: workers/archie
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -e '.[dev]'
+      - run: pytest -q
+        env:
+          ARCHIE_TESTE_PG: postgresql://postgres:teste@localhost/postgres
+          ARCHIE_TESTE_DB: postgresql://postgres:teste@localhost/postgres
+          PGPASSWORD: teste

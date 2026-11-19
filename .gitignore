@@ -45,3 +45,7 @@ Thumbs.db
 
 # Referências de design pesadas (PNGs/HTML ficam fora do git)
 docs/design/*.zip
+
+# testes
+test-results/
+playwright-report/

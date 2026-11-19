@@ -328,7 +328,7 @@ export const demo = {
   turmas,
   matriculas: turmas.slice(0, 6).map((t) => ({ usuario_id: DEMO_ID, turma_id: t.id, papel_turma: 'aluno' as const })),
   pedidos,
-  codigos: { 't-est': 'K7PX4M' } as Record<string, string>,
+  codigos: { 't-est': 'K7PX4M', 't-gp': 'GP7R2K' } as Record<string, string>,
   acervo,
   aulas,
   pessoas,

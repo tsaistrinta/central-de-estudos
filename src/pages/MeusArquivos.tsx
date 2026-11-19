@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { FolderOpen, Plus, Search, Sparkles } from 'lucide-react'
 import { minhasTurmas } from '@/api/academico'
@@ -52,7 +53,8 @@ function semAcento(texto: string) {
 }
 
 export default function MeusArquivos() {
-  const [novo, setNovo] = useState(false)
+  const [params] = useSearchParams()
+  const [novo, setNovo] = useState(() => params.get('novo') === '1')
   const [materia, setMateria] = useState('')
   const [busca, setBusca] = useState('')
   const turmas = useQuery({ queryKey: ['minhas-turmas'], queryFn: minhasTurmas })
