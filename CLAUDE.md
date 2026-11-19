@@ -29,6 +29,8 @@ PTG de ADS da **Fatec Indaiatuba** (autor: Lucas Tsai). Plataforma de estudos qu
 - **Validação coletiva:** base = vagas da turma no site (`turmas.tamanho_real`) ou, se nulo, membros da turma. Confirma com sim ≥ max(5, 25% da base) **e** sim ≥ 80% dos votos. Descarta se não > 50% com quórum ou após 72 h. Professor ou fonte oficial fecham na hora. Só alunos matriculados votam; votos visíveis (avatares, clique mostra a lista).
 - **Reações:** um componente único com lista de quem reagiu (mural, conversa, dúvidas, materiais).
 - **Sem WhatsApp/Telegram** por enquanto: toda conversa acontece dentro da Central.
+- **Ninguém se matricula sozinho numa turma:** entra com o **código da turma** (o professor ou o admin gera e passa em sala) ou **pede para entrar** e o professor da turma ou o admin aprova (`pedidos_turma`). O primeiro acesso e "Adicionar matéria" criam pedidos. 8 códigos errados por hora bloqueiam.
+- **Acervo permanente por disciplina** (`acervo_itens`): provas antigas, resumos, listas que ficam para as próximas turmas; só quem cursa ou cursou a disciplina vê. **Todo envio entra "em análise"** e o Archie verifica (tipo real do arquivo, macro/JavaScript embutido, antivírus se houver, dados pessoais de terceiros, conteúdo impróprio/ilícito/malicioso pelo modelo local). O que reprova vai para a **quarentena** (`/admin/quarentena`) com nome, e-mail, curso, histórico do aluno, hash e motivo. 3 denúncias tiram do ar.
 - **Archie só trata da vida acadêmica na Fatec** (aulas, calendário, provas, secretaria, PTG, estágio, conteúdo das disciplinas); fora disso recusa em uma frase. Segue a LGPD: não lê nem expõe dados pessoais de terceiros, modelo só local, nada vai para IA de terceiros. Detalhes e migração para o servidor da Fatec: doc "Archie · Migração para o servidor da Fatec e políticas de uso" (https://claude.ai/artifact/P5ryQ8vk592BT6QZXXbDWQ).
 
 ### Papéis
@@ -69,7 +71,7 @@ O front **nunca** recebe credenciais do R2 nem a service role.
 | `/notas` | 07 |
 | `/turma`, `/turmas/:id` | 08–10, 19 (conversa, mural, dúvidas, confirmações) |
 | `/curso`, `/unidade` | 11 |
-| `/admin/visao\|fontes\|curadoria\|contas\|servidor` | 14–18 |
+| `/admin/visao\|fontes\|curadoria\|contas\|entradas\|quarentena\|turmas\|servidor` | 14–18 |
 | `/configuracoes/perfil\|notificacoes\|agenda\|privacidade` | 26 (agenda) |
 
 Telas do professor (12–13) entram na Fase 4. Novo evento (23) e cartão do evento (21) são modais/popovers.
@@ -90,6 +92,8 @@ Telas do professor (12–13) entram na Fase 4. Novo evento (23) e cartão do eve
 Schema em `supabase/migrations/20261027000000_schema_inicial.sql` (testado no Postgres 16 com RLS) + `supabase/seed.sql` (Indaiatuba/ADS 2026/2, provisório) + `20261103000001_archie.sql` (pgvector, pgmq, pg_cron) + `20261116000000_archie_v1.sql` (Fase 5: `fontes.extrator`, `capturas`, curadoria aplicável, `archie_status`, view `ultimas_capturas`).
 
 Tabelas: `tenants`, `cursos`, `perfis` (papel, curso, semestre, turno, onboarding), `disciplinas` (cor), `turmas` (`tamanho_real`, `professor_id`), `matriculas`, `aulas_horario`, `eventos` (escopo unidade/curso/turma/pessoal, origem, status, cancelado, rrule, lembretes), `evento_override`, `agenda_preferencias` (camadas ocultas, `ics_token`), `materiais` (R2, `na_entrada`, `oficial`), `tarefas`, `revisao_itens` (SM-2), `avaliacoes`, `notas`, `frequencia`, `mensagens` (canal `avisos` só professor), `duvidas`, `respostas`, `propostas`, `votos`, `reacoes`, `fontes`, `capturas`, `curadoria`, `notificacoes`, `auditoria`. View `pessoas` (nome e papel sem e-mail).
+
+Migração `20261118000000_entrada_e_acervo.sql`: `turma_codigos`, `pedidos_turma`, `tentativas_codigo`, `acervo_itens`, `acervo_denuncias`; funções `pedir_entrada`, `entrar_com_codigo`, `decidir_pedido`, `gerar_codigo_turma`, `pedidos_pendentes`, `cursa_disciplina`, `archie_moderar` (interna), `decidir_quarentena`, `listar_quarentena`; a política "matriculas: entrar" foi removida.
 
 Funções: `criar_perfil` (trigger em auth.users, recusa domínio fora do tenant), `dominio_permitido`, `concluir_onboarding`, `quorum_da_turma`, `avaliar_proposta` (trigger nos votos), `aplicar_proposta` (cria/muda/cancela o evento), `fechar_proposta` (professor/admin), `expirar_propostas` (pg_cron). Archie: `aplicar_curadoria` (interna, usada pelo worker), `decidir_curadoria` (admin), `archie_pedir_coleta` (admin → fila), `avisar_mudanca_evento`. **Funções internas têm `revoke execute` de anon/authenticated** (o Postgres dá EXECUTE a todos por padrão) — fazer o mesmo em toda função security definer nova.
 

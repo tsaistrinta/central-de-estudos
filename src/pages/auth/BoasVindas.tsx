@@ -109,7 +109,7 @@ export default function BoasVindas() {
     try {
       await concluirOnboarding(curso!.id, semestre, turno, [...escolhidas])
       await recarregarPerfil()
-      navegar('/agenda', { replace: true })
+      navegar(escolhidas.size ? '/materias' : '/agenda', { replace: true })
     } catch (falha) {
       setErro(mensagemDeErro(falha))
       setSalvando(false)
@@ -271,7 +271,8 @@ export default function BoasVindas() {
             )}
             <div className="mt-6 flex items-start gap-2.5 rounded-md bg-background px-4 py-3 text-[13px] leading-relaxed text-muted-foreground">
               <Sparkles size={15} strokeWidth={1.9} className="mt-0.5 shrink-0 text-primary" />
-              Horários e salas vêm da grade publicada no site. Datas de prova chegam pelos planos de ensino e pela sua turma.
+              Cada disciplina marcada vira um pedido para entrar na turma: o professor ou o administrador aprova. Se o professor já passou o
+              código da turma, use “Adicionar matéria” em Minhas matérias para entrar na hora. Horários e salas vêm da grade do site.
             </div>
           </>
         )}
@@ -285,7 +286,7 @@ export default function BoasVindas() {
           <Button type="submit" className="ml-auto h-10 px-4 font-semibold" disabled={salvando}>
             {salvando ? 'Salvando…' : passo === 2 ? (
               <>
-                Abrir minha agenda <ArrowRight strokeWidth={1.75} />
+                {escolhidas.size ? 'Pedir para entrar' : 'Abrir minha agenda'} <ArrowRight strokeWidth={1.75} />
               </>
             ) : (
               <>

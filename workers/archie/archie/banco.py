@@ -142,6 +142,20 @@ class Banco:
                         tenant_id, fonte_id, captura_id, t, valor, Jsonb({**metadados, "url": url, "parte": i}))
         return len(trechos)
 
+    # ---------------- acervo (moderação) ----------------
+    def item_acervo(self, item_id: str) -> dict | None:
+        return self._um("""select i.id::text as id, i.status, i.tipo, i.titulo, i.descricao, i.link_url, i.arquivo_chave,
+                                  i.arquivo_nome, i.arquivo_mime, d.nome as disciplina
+                           from acervo_itens i join disciplinas d on d.id = i.disciplina_id where i.id = %s""", item_id)
+
+    def moderar_acervo(self, item_id: str, publicar: bool, moderacao: dict) -> None:
+        self._todos("select public.archie_moderar(%s, %s, %s)", item_id, publicar, Jsonb(moderacao))
+
+    def acervo_em_analise(self, limite: int = 20) -> list[dict]:
+        """Envios que ficaram sem tarefa na fila (ex.: worker desligado por dias e a tarefa expirou)."""
+        return self._todos("""select id::text as id from acervo_itens where status = 'em_analise'
+                              and criado_em < now() - interval '30 minutes' order by criado_em limit %s""", limite)
+
     # ---------------- fila e sinal de vida ----------------
     def ler_fila(self, segundos: int = 900) -> dict | None:
         return self._um("select msg_id, read_ct, message from pgmq.read('archie_jobs', %s, 1)", segundos)

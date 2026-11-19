@@ -19,5 +19,9 @@ Deno.serve(async (req) => {
 
   const limpo = nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w.-]+/g, '-').slice(-120)
   const chave = `${data.user.id}/${crypto.randomUUID()}/${limpo}`
-  return json({ url: await urlAssinada('PUT', chave), chave })
+  try {
+    return json({ url: await urlAssinada('PUT', chave), chave })
+  } catch (e) {
+    return json({ erro: 'Não foi possível preparar o envio.', detalhe: String(e) }, 500)
+  }
 })

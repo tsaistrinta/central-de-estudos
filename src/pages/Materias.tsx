@@ -1,27 +1,68 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { BookOpen, Users } from 'lucide-react'
-import { minhasTurmas } from '@/api/academico'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { BookOpen, Clock, Plus, Users, X } from 'lucide-react'
+import { cancelarPedido, meusPedidos, minhasTurmas, turmasOferecidas } from '@/api/academico'
+import AdicionarMateria from '@/components/espaco/AdicionarMateria'
+import { Button } from '@/components/ui/button'
+import { useAuth } from '@/lib/auth'
+import { tempoRelativo } from '@/lib/pessoas'
 import { listarMateriais } from '@/api/espaco'
 import { Cabecalho, Cartao, Esqueleto, Vazio } from '@/components/foco/Base'
 import { fundoDaCor } from '@/lib/cores'
 import { cn } from '@/lib/utils'
 
 // Minhas matérias: uma por turma em que você está, com o que já tem guardado.
+// "Adicionar matéria" serve para matérias de outros semestres (dependência, adiantamento, aproveitamento).
 export default function Materias() {
+  const qc = useQueryClient()
+  const { perfil } = useAuth()
+  const [adicionar, setAdicionar] = useState(false)
   const turmas = useQuery({ queryKey: ['minhas-turmas'], queryFn: minhasTurmas })
+  const pedidos = useQuery({ queryKey: ['meus-pedidos'], queryFn: meusPedidos })
+  const oferecidas = useQuery({ queryKey: ['turmas-oferecidas', perfil?.curso_id], queryFn: () => turmasOferecidas(perfil!.curso_id!), enabled: !!perfil?.curso_id && !!pedidos.data?.length })
+  const cancelar = useMutation({ mutationFn: cancelarPedido, onSuccess: () => qc.invalidateQueries({ queryKey: ['meus-pedidos'] }) })
   const materiais = useQuery({ queryKey: ['materiais', 'todos'], queryFn: () => listarMateriais({ entrada: false }) })
 
   return (
     <div className="space-y-4">
-      <Cabecalho titulo="Minhas matérias" descricao="Disciplinas deste semestre, com os materiais oficiais e os seus." />
+      <Cabecalho
+        titulo="Minhas matérias"
+        descricao="Disciplinas que você cursa, com os materiais oficiais, os seus e o acervo de cada uma."
+        acoes={
+          <Button onClick={() => setAdicionar(true)}>
+            <Plus /> Adicionar matéria
+          </Button>
+        }
+      />
+      {!!pedidos.data?.length && (
+        <Cartao titulo="Aguardando aprovação">
+          <ul className="px-4 pb-2">
+            {pedidos.data.map((p) => {
+              const t = oferecidas.data?.find((x) => x.id === p.turma_id)
+              return (
+                <li key={p.id} className="flex items-center gap-2.5 border-b border-muted py-2 text-[13px] last:border-0">
+                  <Clock size={15} strokeWidth={1.75} className="text-[var(--warning)]" />
+                  <span className="min-w-0 flex-1 truncate">
+                    <b className="font-medium">{t?.disciplina.nome ?? 'Turma'}</b>
+                    <span className="text-muted-foreground"> · pedido {tempoRelativo(p.criado_em)} · o professor ou o administrador vai responder</span>
+                  </span>
+                  <Button size="sm" variant="ghost" onClick={() => cancelar.mutate(p.id)} aria-label="Cancelar pedido">
+                    <X /> Cancelar
+                  </Button>
+                </li>
+              )
+            })}
+          </ul>
+        </Cartao>
+      )}
       {turmas.isLoading ? (
         <Cartao>
           <Esqueleto linhas={4} className="pt-4" />
         </Cartao>
       ) : !turmas.data?.length ? (
         <Cartao>
-          <Vazio acao={<Link to="/turma" className="font-semibold text-primary hover:underline">Entrar numa turma</Link>}>Você ainda não está em nenhuma turma.</Vazio>
+          <Vazio acao={<button onClick={() => setAdicionar(true)} className="font-semibold text-primary hover:underline">Adicionar matéria</button>}>Você ainda não está em nenhuma turma.</Vazio>
         </Cartao>
       ) : (
         <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(280px,1fr))]">
@@ -55,6 +96,7 @@ export default function Materias() {
           })}
         </div>
       )}
+      {adicionar && <AdicionarMateria onFechar={() => setAdicionar(false)} />}
     </div>
   )
 }

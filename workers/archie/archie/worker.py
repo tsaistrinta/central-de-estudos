@@ -10,7 +10,7 @@ from datetime import date, datetime, timezone
 from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
-from archie import pdf
+from archie import moderacao, pdf
 from archie.banco import Banco
 from archie.coletor import (ColetaRecusada, Coletor, Resposta, assinatura_da_pagina, imagens, links_de_documento,
                           texto_principal)
@@ -76,7 +76,16 @@ class Archie:
             if not msg:
                 break
             self.atender(msg)
-        # 2. Fontes cujo intervalo venceu.
+        # 2. Envios ao acervo que ficaram sem tarefa (a fila descarta depois de 3 falhas).
+        for item in self.banco.acervo_em_analise():
+            if self.parar:
+                break
+            try:
+                moderacao.atender(self, {"item_id": item["id"]})
+            except Exception:
+                log.exception("não consegui moderar o item %s agora", item["id"])
+                break
+        # 3. Fontes cujo intervalo venceu.
         for fonte in self.banco.fontes_vencidas():
             if self.parar:
                 break
@@ -88,6 +97,8 @@ class Archie:
         try:
             if msg["read_ct"] > 3:
                 log.warning("tarefa %s falhou 3 vezes; descartando: %s", msg["msg_id"], corpo)
+            elif corpo.get("tipo") == "moderar_acervo":
+                moderacao.atender(self, corpo)
             elif corpo.get("tipo") == "coletar":
                 fonte = self.banco.fonte(str(corpo.get("fonte_id")))
                 if fonte:

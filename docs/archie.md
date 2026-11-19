@@ -40,6 +40,24 @@ Tudo passa pela tabela `curadoria`: o que o Archie aplicou sozinho fica com `dec
 Em **/admin/curadoria** você vê o que está pendente e o histórico; em **/admin/fontes**, a última leitura de cada
 fonte, os erros e o botão **Verificar agora**; em **/admin/servidor**, se o worker está no ar.
 
+## Moderação do acervo público
+
+Todo envio ao acervo de uma disciplina entra **em análise** e vira uma tarefa `moderar_acervo` na fila. O worker
+baixa o arquivo do Supabase Storage (bucket privado `materiais`), verifica na memória e grava a decisão com
+`archie_moderar` (`archie/moderacao.py`):
+
+1. **Tipo real** pelos primeiros bytes (PDF, PNG, JPEG, WEBP, DOCX/PPTX/XLSX, texto). Executável, script ou zip comum → quarentena.
+2. **Código embutido:** PDF com `/JavaScript`, `/Launch`, arquivo anexado etc. (procura também nos objetos comprimidos); Office com macro VBA ou ActiveX; zip-bomba.
+3. **Antivírus:** se `clamscan`/`clamdscan` estiver instalado no PC (`sudo apt install clamav`), o arquivo passa por ele.
+4. **Dados pessoais de terceiros:** CPF válido, 2+ celulares ou 3+ e-mails pessoais → quarentena, com trecho mascarado.
+5. **Modelo local:** título, descrição, texto e (se for imagem ou PDF escaneado) a imagem. Reprova conteúdo sexual, violência, ódio, ilícito, golpe ou fora do âmbito acadêmico. Só publica com certeza ≥ 60%.
+
+Links não são abertos: o Archie barra encurtadores, IP, `.exe`/`.apk` e similares e julga o resto pelo título.
+O que reprova fica em `/admin/quarentena` com nome, e-mail, curso, histórico do aluno, hash SHA-256 e motivo.
+Se o worker estiver desligado, os envios esperam (o admin pode liberar ou remover à mão).
+
+**Precisa no `.env` do worker:** `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` (só no PC do worker, nunca no git).
+
 ## Ligar (uma vez)
 
 Pré-requisito: o Supabase do `docs/setup-supabase.md` já ligado.

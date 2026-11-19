@@ -266,3 +266,44 @@ def test_site_recusou_vira_erro_na_fonte(banco):
     assert resumo.startswith("erro:") and "403" in resumo
     f = fonte(banco, "grade")
     assert f["status"] == "erro" and "403" in f["ultimo_erro"]
+
+
+def test_entrada_por_pedido_codigo_e_acervo_moderado(banco, url, monkeypatch):
+    """Aluno não se matricula sozinho; entra por código; envia ao acervo; o Archie modera; fora da turma não vê."""
+    from archie import moderacao
+    from tests.test_moderacao import IAFalsa as IAModeracao, OK, _pdf
+
+    admin = _criar_usuario(url, "lucas@aluno.cps.sp.gov.br", "admin")
+    aluno = _criar_usuario(url, "colega@aluno.cps.sp.gov.br")
+    outro = _criar_usuario(url, "outro@aluno.cps.sp.gov.br")
+    turma = q(banco, "select id::text, disciplina_id::text d from turmas order by id limit 1")[0]
+
+    with psycopg.connect(url, autocommit=True, row_factory=dict_row) as c:
+        _login(c, aluno)
+        with pytest.raises(psycopg.errors.InsufficientPrivilege):
+            c.execute("insert into matriculas (turma_id) values (%s)", (turma["id"],))
+        assert c.execute("select public.pedir_entrada(%s, 'aproveitamento') r", (turma["id"],)).fetchone()["r"] == "pendente"
+    with psycopg.connect(url, autocommit=True, row_factory=dict_row) as c:
+        _login(c, admin)
+        codigo = c.execute("select public.gerar_codigo_turma(%s) c", (turma["id"],)).fetchone()["c"]
+        assert [p["nome"] for p in c.execute("select * from public.pedidos_pendentes()").fetchall()]
+    with psycopg.connect(url, autocommit=True, row_factory=dict_row) as c:
+        _login(c, aluno)
+        assert c.execute("select public.entrar_com_codigo(%s) t", (codigo.lower(),)).fetchone()["t"] is not None
+        assert c.execute("select status from pedidos_turma").fetchone()["status"] == "aprovado"
+        item = c.execute("""insert into acervo_itens (disciplina_id, titulo, tipo, arquivo_chave, arquivo_nome, status)
+                            values (%s, 'P1 2025/2', 'prova_antiga', %s, 'p1.pdf', 'publicado') returning id::text, status""",
+                         (turma["d"], f"{aluno}/x/p1.pdf")).fetchone()
+        assert item["status"] == "em_analise"  # ninguém se auto-publica
+
+    monkeypatch.setattr(moderacao, "baixar", lambda *a, **k: _pdf("Questao 1: heranca em Java"))
+    y = Archie(cfg(), banco, Coletor("Teste", 0), IAModeracao(OK))
+    banco._todos("update fontes set ultima_verificacao = now()")
+    y.uma_rodada()
+    i = q(banco, "select status, moderacao from acervo_itens where id = %s", item["id"])[0]
+    assert i["status"] == "publicado" and i["moderacao"]["origem"] == "archie" and len(i["moderacao"]["sha256"]) == 64
+    assert q(banco, "select count(*) n from pgmq.q_archie_jobs")[0]["n"] == 0
+
+    with psycopg.connect(url, autocommit=True, row_factory=dict_row) as c:
+        _login(c, outro)  # não cursa a disciplina
+        assert c.execute("select count(*) n from acervo_itens").fetchone()["n"] == 0

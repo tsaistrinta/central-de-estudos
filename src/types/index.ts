@@ -310,3 +310,78 @@ export interface ArchieStatus {
   erros: number
   ultimo_erro?: string | null
 }
+
+// ---------- Entrada nas turmas (pedido ou código) ----------
+export type StatusPedido = 'pendente' | 'aprovado' | 'recusado' | 'cancelado'
+
+export interface PedidoTurma {
+  id: string
+  turma_id: string
+  usuario_id: string
+  mensagem: string | null
+  status: StatusPedido
+  criado_em: string
+  decidido_em: string | null
+}
+
+/** Pedido pendente visto por quem aprova (professor da turma ou admin). */
+export interface PedidoPendente {
+  id: string
+  turma_id: string
+  usuario_id: string
+  nome: string
+  email: string
+  mensagem: string | null
+  criado_em: string
+  disciplina: string
+  semestre_matriz: number | null
+  turno: Turno
+}
+
+// ---------- Acervo permanente da disciplina ----------
+export type TipoAcervo = 'prova_antiga' | 'resumo' | 'lista' | 'trabalho' | 'slides' | 'livro_apostila' | 'outro'
+export type StatusAcervo = 'em_analise' | 'publicado' | 'quarentena' | 'removido'
+
+export interface ModeracaoAcervo {
+  motivo?: string
+  categorias?: string[]
+  confianca?: number
+  origem?: 'archie' | 'denuncias' | 'verificacao'
+  modelo?: string
+  sha256?: string
+  tipo_detectado?: string
+  verificacoes?: string[]
+  trecho?: string
+  nota_admin?: string | null
+}
+
+export interface ItemAcervo {
+  id: string
+  disciplina_id: string
+  autor_id: string
+  tipo: TipoAcervo
+  titulo: string
+  descricao: string | null
+  periodo_origem: string | null
+  link_url: string | null
+  arquivo_chave: string | null
+  arquivo_nome: string | null
+  arquivo_tamanho: number | null
+  arquivo_mime: string | null
+  status: StatusAcervo
+  moderacao: ModeracaoAcervo | null
+  moderado_em: string | null
+  criado_em: string
+}
+
+/** Item na quarentena, com os dados de quem enviou (só o admin vê). */
+export interface ItemQuarentena extends Omit<ItemAcervo, 'disciplina_id' | 'periodo_origem'> {
+  disciplina: string
+  autor_nome: string
+  autor_email: string
+  autor_curso: string | null
+  autor_semestre: number | null
+  autor_envios: number
+  autor_retidos: number
+  denuncias: number
+}

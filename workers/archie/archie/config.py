@@ -41,6 +41,9 @@ class Config:
     conhecimento: bool  # guardar trechos com embedding para a busca (RAG)
     fuso: str
     max_bytes: int
+    # Para baixar os arquivos enviados ao acervo e moderar (Supabase Storage). Só neste PC, nunca no git.
+    supabase_url: str | None = None
+    supabase_chave_servico: str | None = None
 
     @classmethod
     def do_ambiente(cls) -> "Config":
@@ -63,4 +66,6 @@ class Config:
             conhecimento=_bool("ARCHIE_CONHECIMENTO", True),
             fuso=e("ARCHIE_FUSO", "America/Sao_Paulo"),
             max_bytes=int(e("ARCHIE_MAX_MB", "25")) * 1024 * 1024,
+            supabase_url=e("SUPABASE_URL"),
+            supabase_chave_servico=e("SUPABASE_SERVICE_ROLE_KEY"),
         )

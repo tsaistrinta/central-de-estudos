@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, ChevronRight, Hash, Pin, Plus, Send, Sparkles, Users } from 'lucide-react'
-import { entrarNaTurma, membrosDaTurma, minhasTurmas, pessoas as buscarPessoas, tenantAtual, turmasOferecidas } from '@/api/academico'
+import { membrosDaTurma, minhasTurmas, pessoas as buscarPessoas, tenantAtual } from '@/api/academico'
 import { criarProposta, enviarMensagem, listarDuvidas, listarMensagens, listarPropostas, marcarResolvida, ouvirTurma, perguntar, reacoesDe, responder } from '@/api/comunidade'
 import { listarMateriais } from '@/api/espaco'
 import { Cabecalho, Cartao, Esqueleto, PontoMateria, Vazio } from '@/components/foco/Base'
@@ -12,6 +12,8 @@ import Reacoes from '@/components/comunidade/Reacoes'
 import Votacao from '@/components/comunidade/Votacao'
 import ItemMaterial from '@/components/espaco/ItemMaterial'
 import NovoMaterial from '@/components/espaco/NovoMaterial'
+import AdicionarMateria from '@/components/espaco/AdicionarMateria'
+import EntradaDaTurma from '@/components/comunidade/EntradaDaTurma'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth'
 import { entenderFrase } from '@/lib/frase'
@@ -359,31 +361,17 @@ function Membros({ turma, pessoas }: { turma: MinhaTurma; pessoas: Map<string, P
   )
 }
 
-function EntrarEmTurma({ turmas }: { turmas: MinhaTurma[] }) {
-  const qc = useQueryClient()
-  const { perfil } = useAuth()
-  const oferecidas = useQuery({ queryKey: ['turmas-oferecidas', perfil?.curso_id], queryFn: () => turmasOferecidas(perfil!.curso_id!), enabled: !!perfil?.curso_id })
-  const entrar = useMutation({ mutationFn: (id: string) => entrarNaTurma(id), onSuccess: () => qc.invalidateQueries({ queryKey: ['minhas-turmas'] }) })
-  const disponiveis = (oferecidas.data ?? []).filter((t) => !turmas.some((m) => m.id === t.id))
+function EntrarEmTurma() {
+  const [aberto, setAberto] = useState(false)
   return (
     <Cartao titulo="Entrar em outra turma">
-      {disponiveis.length === 0 ? (
-        <Vazio>Você já está em todas as turmas oferecidas do seu curso.</Vazio>
-      ) : (
-        <ul className="px-4 pb-3">
-          {disponiveis.map((t) => (
-            <li key={t.id} className="flex items-center gap-2.5 border-b border-muted py-2 text-[13px] last:border-0">
-              <PontoMateria cor={`var(--subject-${t.disciplina.cor})`} />
-              <span className="min-w-0 flex-1 truncate">
-                {t.disciplina.nome} <span className="text-muted-foreground">· {t.disciplina.semestre_matriz}º · {t.turno}</span>
-              </span>
-              <Button size="sm" variant="outline" onClick={() => entrar.mutate(t.id)}>
-                Entrar
-              </Button>
-            </li>
-          ))}
-        </ul>
-      )}
+      <div className="px-4 pb-4">
+        <p className="mb-3 text-[13px] text-muted-foreground">Dependência, adiantamento ou aproveitamento de estudos: entre com o código do professor ou peça para entrar.</p>
+        <Button size="sm" onClick={() => setAberto(true)}>
+          <Plus /> Adicionar matéria
+        </Button>
+      </div>
+      {aberto && <AdicionarMateria onFechar={() => setAberto(false)} />}
     </Cartao>
   )
 }
@@ -402,6 +390,7 @@ export default function Turma() {
   const materiais = useQuery({ queryKey: ['materiais', 'turma', id], queryFn: () => listarMateriais({ turmaId: id }), enabled: !!turma && aba === 'materiais' })
   const abertas = useQuery({ queryKey: ['propostas', 'turma', id], queryFn: () => listarPropostas([id!]), enabled: !!turma })
   const eu = meuIdSincrono()
+  const { perfil } = useAuth()
   const souProfessor = !!turma && (turma.professor_id === eu || turma.papel_turma === 'professor')
   const mapa = useMemo(() => pessoas.data ?? new Map<string, Pessoa>(), [pessoas.data])
 
@@ -424,7 +413,7 @@ export default function Turma() {
     return (
       <div className="space-y-4">
         <Cabecalho titulo="Minha turma" descricao="Você ainda não está em nenhuma turma." />
-        <EntrarEmTurma turmas={[]} />
+        <EntrarEmTurma />
       </div>
     )
   }
@@ -515,7 +504,10 @@ export default function Turma() {
           <Cartao>
             <Membros turma={turma} pessoas={mapa} />
           </Cartao>
-          <EntrarEmTurma turmas={turmas.data ?? []} />
+          <div className="space-y-4">
+            {(souProfessor || perfil?.papel === 'admin') && <EntradaDaTurma turmaId={turma.id} />}
+            <EntrarEmTurma />
+          </div>
         </div>
       )}
       {novoMaterial && <NovoMaterial turmas={[turma]} disciplinaId={turma.disciplina_id} compartilharPadrao onFechar={() => setNovoMaterial(false)} />}

@@ -8,6 +8,7 @@ import { Cabecalho, Cartao, Esqueleto, Vazio } from '@/components/foco/Base'
 import { Button } from '@/components/ui/button'
 import ItemMaterial from '@/components/espaco/ItemMaterial'
 import NovoMaterial from '@/components/espaco/NovoMaterial'
+import Acervo from '@/components/acervo/Acervo'
 import { DIAS_CURTOS } from '@/lib/datas'
 import { cn } from '@/lib/utils'
 
@@ -50,6 +51,7 @@ export default function Materia() {
         }
       />
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="min-w-0 space-y-4">
         <Cartao>
           <div className="flex gap-1.5 border-b border-border px-4 py-3">
             {(
@@ -67,6 +69,8 @@ export default function Materia() {
           </div>
           {materiais.isLoading ? <Esqueleto className="pt-3" /> : lista.length === 0 ? <Vazio>Nada aqui ainda.</Vazio> : <ul>{lista.map((m) => <ItemMaterial key={m.id} m={m} />)}</ul>}
         </Cartao>
+        <Acervo disciplinaId={turma.disciplina_id} disciplinaNome={turma.disciplina.nome} />
+        </div>
         <Cartao titulo="Aulas">
           {(aulas.data ?? []).length === 0 ? (
             <Vazio>Horário ainda não captado da grade.</Vazio>

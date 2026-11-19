@@ -13,7 +13,9 @@ import type {
   Evento,
   Fonte,
   Frequencia,
+  ItemAcervo,
   ItemCuradoria,
+  PedidoTurma,
   ItemRevisao,
   Material,
   Mensagem,
@@ -86,6 +88,11 @@ const disciplinas: Disciplina[] = [
   { id: 'd-ihc', curso_id: CURSO, nome: 'Interação Humano-Computador', sigla: 'IHC', semestre_matriz: 3, cor: 'framboesa' },
   { id: 'd-soc', curso_id: CURSO, nome: 'Sociedade e Tecnologia', sigla: 'SOC', semestre_matriz: 3, cor: 'mostarda' },
   { id: 'd-bd', curso_id: CURSO, nome: 'Banco de Dados', sigla: 'BD', semestre_matriz: 3, cor: 'azul' },
+  // De outros semestres (para "Adicionar matéria": dependência ou aproveitamento).
+  { id: 'd-ed', curso_id: CURSO, nome: 'Estrutura de Dados', sigla: 'ED', semestre_matriz: 4, cor: 'verde' },
+  { id: 'd-gp', curso_id: CURSO, nome: 'Gestão de Projetos', sigla: 'GP', semestre_matriz: 4, cor: 'cobalto' },
+  { id: 'd-pdm', curso_id: CURSO, nome: 'Programação para Dispositivos Móveis', sigla: 'PDM', semestre_matriz: 5, cor: 'laranja' },
+  { id: 'd-les', curso_id: CURSO, nome: 'Laboratório de Engenharia de Software', sigla: 'LES', semestre_matriz: 6, cor: 'roxo' },
 ]
 
 const professores: Record<string, string> = {
@@ -95,6 +102,10 @@ const professores: Record<string, string> = {
   'd-ihc': 'Prof. Michel',
   'd-soc': 'Profa. Miriam',
   'd-bd': 'Prof. Renato',
+  'd-ed': 'Prof. Rodrigo',
+  'd-gp': 'Profa. Sandra',
+  'd-pdm': 'Prof. Felipe',
+  'd-les': 'Prof. Marlon',
 }
 
 const turmas: Turma[] = disciplinas.map((d) => ({
@@ -276,6 +287,35 @@ const preferencias: AgendaPreferencias = {
   ics_token: 'demonstracao',
 }
 
+// Pedidos para entrar em turmas: um seu (aguardando) e um de colega para você aprovar como admin.
+const pedidos: PedidoTurma[] = [
+  { id: 'pd-1', turma_id: 't-ed', usuario_id: DEMO_ID, mensagem: 'Faço por aproveitamento de estudos.', status: 'pendente', criado_em: haMin(90), decidido_em: null },
+  { id: 'pd-2', turma_id: 't-est', usuario_id: 'p3', mensagem: null, status: 'pendente', criado_em: haMin(30), decidido_em: null },
+]
+
+const acervo: ItemAcervo[] = [
+  {
+    id: 'ac-1', disciplina_id: 'd-poo', autor_id: 'p2', tipo: 'prova_antiga', titulo: 'P1 de POO · 2025/2 (com resolução)',
+    descricao: 'Prova de herança e polimorfismo, resolvida por mim depois da correção.', periodo_origem: '2025/2', link_url: null,
+    arquivo_chave: 'demo/p1-poo.pdf', arquivo_nome: 'p1-poo-2025-2.pdf', arquivo_tamanho: 412_000, arquivo_mime: 'application/pdf',
+    status: 'publicado', moderacao: { motivo: 'Conteúdo acadêmico da disciplina.', confianca: 0.93, origem: 'archie' }, moderado_em: haMin(4000), criado_em: haMin(4100),
+  },
+  {
+    id: 'ac-2', disciplina_id: 'd-poo', autor_id: 'p4', tipo: 'resumo', titulo: 'Resumo de padrões de projeto (GoF)',
+    descricao: null, periodo_origem: '2026/1', link_url: 'https://refactoring.guru/pt-br/design-patterns', arquivo_chave: null, arquivo_nome: null,
+    arquivo_tamanho: null, arquivo_mime: null, status: 'publicado', moderacao: { motivo: 'Link acadêmico.', confianca: 0.9, origem: 'archie' },
+    moderado_em: haMin(9000), criado_em: haMin(9100),
+  },
+  {
+    id: 'ac-3', disciplina_id: 'd-est', autor_id: 'p5', tipo: 'lista', titulo: 'Lista de exercícios · distribuição normal',
+    descricao: null, periodo_origem: '2026/1', link_url: null, arquivo_chave: 'demo/lista.pdf', arquivo_nome: 'lista-normal.pdf',
+    arquivo_tamanho: 220_000, arquivo_mime: 'application/pdf', status: 'quarentena',
+    moderacao: { motivo: 'O arquivo tem CPF e telefone de pessoas.', categorias: ['dados_pessoais'], confianca: 0.97, origem: 'verificacao',
+      sha256: '9f2c…a71e', tipo_detectado: 'PDF', verificacoes: ['tipo do arquivo', 'código embutido', 'dados pessoais'], trecho: 'CPF ***.***.***-** · (19) 9****-****' },
+    moderado_em: haMin(50), criado_em: haMin(55),
+  },
+]
+
 const cursos: Curso[] = [{ id: CURSO, tenant_id: TENANT, nome: 'Análise e Desenvolvimento de Sistemas', sigla: 'ADS', semestres: 6 }]
 
 export const demo = {
@@ -284,7 +324,10 @@ export const demo = {
   cursos,
   disciplinas,
   turmas,
-  matriculas: turmas.map((t) => ({ usuario_id: DEMO_ID, turma_id: t.id, papel_turma: 'aluno' as const })),
+  matriculas: turmas.slice(0, 6).map((t) => ({ usuario_id: DEMO_ID, turma_id: t.id, papel_turma: 'aluno' as const })),
+  pedidos,
+  codigos: { 't-est': 'K7PX4M' } as Record<string, string>,
+  acervo,
   aulas,
   pessoas,
   eventos,

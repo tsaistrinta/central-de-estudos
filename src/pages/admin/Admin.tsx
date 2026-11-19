@@ -13,6 +13,7 @@ import { ROTULO_PAPEL, tempoRelativo } from '@/lib/pessoas'
 import { cn } from '@/lib/utils'
 import { DIAS_CURTOS, EFEITO_APROVAR, ROTULO_CURADORIA, ROTULO_EXTRATOR, workerNoAr } from '@/lib/archie'
 import type { ExtratorFonte, Fonte, ItemCuradoria, Papel } from '@/types'
+import { CodigoDaTurmaCelula, PedidosDeEntrada, Quarentena } from './Moderacao'
 
 // Telas 14–18 · Painel do dono da plataforma.
 const abas = {
@@ -20,6 +21,8 @@ const abas = {
   fontes: 'Fontes monitoradas',
   curadoria: 'Curadoria',
   contas: 'Contas e papéis',
+  entradas: 'Pedidos de entrada',
+  quarentena: 'Quarentena do acervo',
   turmas: 'Turmas',
   servidor: 'Servidor e IA',
 } as const
@@ -345,7 +348,7 @@ function Contas() {
         {contas.isLoading ? (
           <Esqueleto />
         ) : (
-          <div className="overflow-x-auto"><table className="w-full min-w-[560px] text-[13px]">
+          <div className="overflow-x-auto"><table className="w-full min-w-[680px] text-[13px]">
             <thead>
               <tr className="border-y border-border bg-background text-left text-xs text-muted-foreground">
                 <th className="px-4 py-2 font-medium">Nome</th>
@@ -394,13 +397,14 @@ function Turmas() {
       {turmas.isLoading ? (
         <Esqueleto />
       ) : (
-        <div className="overflow-x-auto"><table className="w-full min-w-[560px] text-[13px]">
+        <div className="overflow-x-auto"><table className="w-full min-w-[680px] text-[13px]">
           <thead>
             <tr className="border-y border-border bg-background text-left text-xs text-muted-foreground">
               <th className="px-4 py-2 font-medium">Disciplina</th>
               <th className="px-2 py-2 font-medium">Período</th>
               <th className="px-2 py-2 font-medium">Vagas</th>
               <th className="px-2 py-2 font-medium">Professor com conta</th>
+              <th className="px-2 py-2 font-medium">Código</th>
             </tr>
           </thead>
           <tbody>
@@ -432,6 +436,9 @@ function Turmas() {
                       </option>
                     ))}
                   </select>
+                </td>
+                <td className="px-2 py-2">
+                  <CodigoDaTurmaCelula turmaId={t.id} />
                 </td>
               </tr>
             ))}
@@ -522,6 +529,8 @@ export default function Admin() {
           {atual === 'fontes' && <Fontes />}
           {atual === 'curadoria' && <Curadoria />}
           {atual === 'contas' && <Contas />}
+          {atual === 'entradas' && <PedidosDeEntrada />}
+          {atual === 'quarentena' && <Quarentena />}
           {atual === 'turmas' && <Turmas />}
           {atual === 'servidor' && <Servidor />}
         </div>
