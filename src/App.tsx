@@ -35,13 +35,11 @@ export default function App() {
           <Route path="entrar" element={<Entrar />} />
           <Route path="criar-conta" element={<CriarConta />} />
         </Route>
-        <Route element={<AuthCartao />}>
-          <Route path="recuperar-senha" element={<RecuperarSenha />} />
-        </Route>
       </Route>
 
-      {/* Fora de RotaPublica: o link de recuperação chega com uma sessão aberta. */}
+      {/* Fora de RotaPublica: depois do código de recuperação (ou de um link antigo) a pessoa já está com a sessão aberta. */}
       <Route element={<AuthCartao />}>
+        <Route path="recuperar-senha" element={<RecuperarSenha />} />
         <Route path="redefinir-senha" element={<RedefinirSenha />} />
       </Route>
       <Route path="termos" element={<Legal titulo="Termos de uso" />} />

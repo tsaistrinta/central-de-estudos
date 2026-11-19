@@ -36,9 +36,9 @@ export default function RedefinirSenha() {
     return (
       <div>
         <h1 className="text-[22px] font-semibold tracking-tight">Link inválido ou expirado</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Peça um novo link para redefinir sua senha.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Peça um código para redefinir sua senha.</p>
         <Link to="/recuperar-senha" className="mt-5 inline-block text-sm font-semibold text-primary hover:underline">
-          Pedir novo link
+          Pedir código
         </Link>
       </div>
     )

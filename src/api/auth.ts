@@ -72,12 +72,16 @@ export async function enviarCodigoDeEntrada(email: string) {
   await falharSeErro(cliente().auth.signInWithOtp({ email, options: { shouldCreateUser: false } }))
 }
 
-export async function enviarLinkDeRecuperacao(email: string) {
-  await falharSeErro(
-    cliente().auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/redefinir-senha`,
-    }),
-  )
+/**
+ * Esqueci a senha: manda um código de 6 dígitos (modelo "Magic Link" do Supabase, que já traz o {{ .Token }}).
+ * Código em vez de link porque o e-mail institucional (Microsoft 365) abre os links sozinho e gasta o link de uso único.
+ * Se o e-mail não tiver conta, responde igual (não revela quem tem conta).
+ */
+export async function enviarCodigoDeRecuperacao(email: string) {
+  const { error } = await cliente().auth.signInWithOtp({ email, options: { shouldCreateUser: false } })
+  if (!error) return
+  if (error.code === 'otp_disabled' || /signups not allowed/i.test(error.message)) return
+  throw error
 }
 
 export async function redefinirSenha(novaSenha: string) {
