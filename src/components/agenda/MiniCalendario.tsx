@@ -48,7 +48,7 @@ export default function MiniCalendario({ foco, onEscolher, diasComProva = [] }: 
               onClick={() => onEscolher(d)}
               className={cn(
                 'relative flex h-[27px] items-center justify-center tabular-nums',
-                fora && 'text-faint/70',
+                fora && 'text-faint',
                 naSemana && !fora && 'bg-accent font-medium text-accent-foreground',
                 naSemana && d.getDay() === 0 && 'rounded-l-md',
                 naSemana && d.getDay() === 6 && 'rounded-r-md',

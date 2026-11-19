@@ -132,7 +132,7 @@ export default function Tarefas() {
       <Cabecalho titulo="Tarefas" descricao="Trabalhos, listas e entregas. Arraste o cartão para mudar de coluna." />
       <form onSubmit={aoCriar} className="flex flex-wrap gap-2 rounded-lg border border-border bg-card p-3">
         <input value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Nova tarefa…" className="h-9 min-w-[220px] flex-1 rounded-md border border-border px-3 text-sm outline-none focus:border-primary" />
-        <select value={disc} onChange={(e) => setDisc(e.target.value)} className="h-9 rounded-md border border-border bg-card px-2 text-sm">
+        <select aria-label="Matéria da tarefa" value={disc} onChange={(e) => setDisc(e.target.value)} className="h-9 rounded-md border border-border bg-card px-2 text-sm">
           <option value="">Sem matéria</option>
           {(turmas.data ?? []).map((t) => (
             <option key={t.id} value={t.disciplina_id}>
@@ -140,7 +140,7 @@ export default function Tarefas() {
             </option>
           ))}
         </select>
-        <input type="date" value={prazo} onChange={(e) => setPrazo(e.target.value)} className="h-9 rounded-md border border-border px-2 text-sm" />
+        <input type="date" aria-label="Prazo da tarefa" value={prazo} onChange={(e) => setPrazo(e.target.value)} className="h-9 rounded-md border border-border px-2 text-sm" />
         <button type="submit" disabled={!titulo.trim()} className="inline-flex h-9 items-center gap-1.5 rounded-md bg-primary px-3.5 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-50">
           <Plus size={16} /> Adicionar
         </button>

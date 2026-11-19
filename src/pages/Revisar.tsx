@@ -101,7 +101,7 @@ export default function Revisar() {
               <textarea value={pergunta} onChange={(e) => setPergunta(e.target.value)} rows={2} placeholder="Pergunta" className="w-full rounded-md border border-border px-3 py-2 text-sm outline-none focus:border-primary" />
               <textarea value={resposta} onChange={(e) => setResposta(e.target.value)} rows={2} placeholder="Resposta" className="w-full rounded-md border border-border px-3 py-2 text-sm outline-none focus:border-primary" />
               <div className="flex gap-2">
-                <select value={disc} onChange={(e) => setDisc(e.target.value)} className="h-9 min-w-0 flex-1 rounded-md border border-border bg-card px-2 text-sm">
+                <select aria-label="Matéria do item de revisão" value={disc} onChange={(e) => setDisc(e.target.value)} className="h-9 min-w-0 flex-1 rounded-md border border-border bg-card px-2 text-sm">
                   <option value="">Sem matéria</option>
                   {(turmas.data ?? []).map((t) => (
                     <option key={t.id} value={t.disciplina_id}>

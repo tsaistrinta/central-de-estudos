@@ -63,7 +63,7 @@ function Perfil() {
         </div>
         <div className="space-y-1.5">
           <Label>E-mail institucional</Label>
-          <Input value={perfil.email} disabled icone={<Mail />} />
+          <Input value={perfil.email} disabled aria-label="E-mail institucional" icone={<Mail />} />
         </div>
         <p className="text-[13px] text-muted-foreground">
           Papel: <b className="text-foreground">{ROTULO_PAPEL[perfil.papel]}</b>

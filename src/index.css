@@ -15,7 +15,7 @@
   --foreground: #14171f;
   --muted: #eef0f3;
   --muted-foreground: #5f6675;
-  --faint: #8a909c;
+  --faint: #6a717e;
   --border: #e5e7ec;
   --input: #e5e7ec;
   --ring: #2f4ad0;
@@ -26,11 +26,11 @@
   --accent: #eaeefc;
   --accent-foreground: #2f4ad0;
 
-  --success: #16834f;
+  --success: #12703f;
   --success-soft: #e6f4ec;
-  --warning: #b7700b;
+  --warning: #8a5300;
   --warning-soft: #fbf0dc;
-  --destructive: #cc3a3a;
+  --destructive: #b42f2f;
   --destructive-soft: #fbeaea;
   --highlight: #fdf0b8;
 
@@ -53,7 +53,7 @@
 
   /* tipos de evento */
   --evt-prova: #cc3a3a;
-  --evt-entrega: #b7700b;
+  --evt-entrega: #9a5c00;
   --evt-trabalho: #5f3dc4;
   --evt-apresentacao: #2f4ad0;
   --evt-aula: #1c7ed6;
