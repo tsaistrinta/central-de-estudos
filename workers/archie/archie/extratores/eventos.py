@@ -25,6 +25,8 @@ class EventoLido:
     trecho: str | None = None
     confianca: float = 0.5
     documento_url: str | None = None
+    pagina: int | None = None
+    conferencia: dict | None = None  # resultado da segunda leitura (archie.conferencia)
 
     @property
     def dia_todo(self) -> bool:
@@ -78,7 +80,8 @@ def validar_eventos(brutos: list[dict], ano: int | None, documento_url: str = ""
         e = EventoLido(titulo=titulo, tipo=tipo, inicio=inicio, fim=fim, hora_inicio=_hora(b.get("hora_inicio")),
                        hora_fim=_hora(b.get("hora_fim")), sem_aula=bool(b.get("sem_aula")),
                        cursos=[c for c in (b.get("cursos") or []) if isinstance(c, str) and c.strip()],
-                       trecho=(b.get("trecho") or None), confianca=confianca, documento_url=documento_url or None)
+                       trecho=(b.get("trecho") or None), confianca=confianca, documento_url=documento_url or None,
+                       pagina=b.get("pagina") if isinstance(b.get("pagina"), int) else None)
         if e.sem_aula and not re.search(r"feriado|sem aula|recesso|n[ãa]o letivo", titulo, re.I):
             e.titulo = f"Sem aula · {titulo}"  # a agenda tira as aulas desses dias pelo título
         chave = (normalizar(e.titulo), e.inicio, tuple(sorted(normalizar(c) for c in e.cursos)))

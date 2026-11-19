@@ -4,6 +4,7 @@ ARCHIE_TESTE_PG=postgresql://postgres@localhost:5432/postgres  python -m pytest
 Cada teste ganha um banco novo com as migrações e o seed do piloto.
 """
 
+import copy
 import os
 import subprocess
 import uuid
@@ -20,6 +21,7 @@ from tests.conftest import pdf_de_posicoes
 from tests.test_calendario import IAFalsa
 from archie.banco import Banco
 from archie.coletor import Coletor
+from archie.conferencia import comparar_grades, uma_leitura
 from archie.config import Config
 from archie.extratores.eventos import EventoLido
 from archie.extratores.grade import ler_pdf
@@ -76,13 +78,20 @@ def aulas(banco, turma):
         where turma_id = %s order by dia_semana, inicio""", turma)]
 
 
-def test_grade_do_pdf_corrige_o_seed_provisorio(banco):
+def grade_conferida(segunda=None):
+    """A grade real do PDF com a segunda leitura (pela imagem) igual à primeira, ou a que for passada."""
     [g] = ler_pdf(pdf_de_posicoes("grade_ads_noturno_2026_2.tsv"))
+    g.conferencia = comparar_grades(g, segunda or copy.deepcopy(g))
+    return g
+
+
+def test_grade_do_pdf_corrige_o_seed_provisorio(banco):
+    g = grade_conferida()
     f = fonte(banco, "grade")
     cursos = banco.cursos(TENANT)
-    r = Publicador(banco, cfg(), f, None).grade(g, cursos, "2026/2")
+    r = Publicador(banco, cfg(), f, None).grade(g, cursos, "2026/2", documento_url="https://x/ADS_NOT.pdf", pagina=1)
 
-    # As 6 turmas do seed foram achadas pelo nome abreviado do PDF e ganharam o horário real.
+    # As 6 turmas do seed foram achadas pelo nome abreviado do PDF, no mesmo semestre, e ganharam o horário real.
     assert aulas(banco, "00000000-0000-0000-0000-0000000000e1") == [(5, "19:00", "22:30", "Lab. 1 / Lab. 3 / Lab. 4")]
     assert aulas(banco, "00000000-0000-0000-0000-0000000000e2") == [(6, "09:30", "13:00", "Lab. 11")]
     assert aulas(banco, "00000000-0000-0000-0000-0000000000e3") == [(2, "20:50", "22:30", "Lab. 11"),
@@ -94,6 +103,14 @@ def test_grade_do_pdf_corrige_o_seed_provisorio(banco):
     assert prof["00000000-0000-0000-0000-0000000000e1"] == "Sérgio Furgeri"
     assert prof["00000000-0000-0000-0000-0000000000e6"] == "Marlon"
     assert r.mudancas == 6
+
+    # Toda curadoria leva a fonte (PDF e página), o semestre e o resultado da segunda leitura.
+    aplicada = q(banco, "select dados from curadoria where decisao = 'aprovado' and item_tipo = 'grade_turma' limit 1")[0]
+    assert aplicada["dados"]["documento_url"] == "https://x/ADS_NOT.pdf" and aplicada["dados"]["pagina"] == 1
+    assert aplicada["dados"]["conferencia"]["confere"] and aplicada["dados"]["semestre"] in (3, 4)
+    # E a turma guarda o link do PDF, que o aluno vê no cartão da aula.
+    t = q(banco, "select horario_fonte_url, horario_pagina from turmas where id = '00000000-0000-0000-0000-0000000000e5'")[0]
+    assert t == {"horario_fonte_url": "https://x/ADS_NOT.pdf", "horario_pagina": 1}
 
     # Disciplinas que o seed não tinha esperam o admin (estrutura nova não entra sozinha por padrão).
     pend = q(banco, "select resumo, dados from curadoria where decisao is null and item_tipo = 'disciplina_nova'")
@@ -108,15 +125,66 @@ def test_grade_do_pdf_corrige_o_seed_provisorio(banco):
     assert (r2.mudancas, r2.pendentes, r2.iguais) == (0, 0, 6)
 
 
+def test_grade_sem_segunda_leitura_nao_publica_nada(banco):
+    [g] = ler_pdf(pdf_de_posicoes("grade_ads_noturno_2026_2.tsv"))
+    g.conferencia = uma_leitura("só a leitura pela posição (a IA não respondeu)")
+    r = Publicador(banco, cfg(), fonte(banco, "grade"), None).grade(g, banco.cursos(TENANT), "2026/2")
+    assert r.mudancas == 0 and r.publicados == 0
+    assert aulas(banco, "00000000-0000-0000-0000-0000000000e1") != [(5, "19:00", "22:30", "Lab. 1 / Lab. 3 / Lab. 4")]
+    motivos = {m["motivo"] for m in q(banco, "select motivo from curadoria where item_tipo = 'grade_turma'")}
+    assert motivos == {"as duas leituras não batem: só a leitura pela posição (a IA não respondeu)"}
+
+
+def test_grade_com_leituras_divergentes_retem_so_o_que_diverge(banco):
+    segunda = copy.deepcopy(ler_pdf(pdf_de_posicoes("grade_ads_noturno_2026_2.tsv"))[0])
+    for a in segunda.aulas:
+        if a.disciplina == "P.O.O":
+            a.inicio = "20:50"  # a IA leu outro horário para POO
+        if a.disciplina == "ESTATÍSTICA":
+            a.sala = "Lab. 9"  # e outra sala para Estatística
+    g = grade_conferida(segunda)
+    r = Publicador(banco, cfg(), fonte(banco, "grade"), None).grade(g, banco.cursos(TENANT), "2026/2")
+    assert r.mudancas == 4  # as outras 4 turmas do seed batem nas duas leituras
+    retidas = {c["dados"]["disciplina_nome"]: c for c in q(
+        banco, "select motivo, dados from curadoria where decisao is null and item_tipo = 'grade_turma'")}
+    assert set(retidas) == {"Programação Orientada a Objetos", "Estatística"}
+    assert "dias ou horários diferentes" in retidas["Programação Orientada a Objetos"]["motivo"]
+    assert "sala diferente" in retidas["Estatística"]["motivo"]
+    c = retidas["Estatística"]["dados"]["conferencia"]
+    assert c["posicao"] == "sáb 09:30–13:00 (Lab. 11)" and c["imagem"] == "sáb 09:30–13:00 (Lab. 9)"
+
+
+def test_grade_nao_casa_nome_de_outro_semestre(banco):
+    # Como estava em produção: IHC e Sociedade e Tecnologia cadastradas por engano no 3º semestre.
+    q(banco, "update disciplinas set semestre_matriz = 3 where sigla in ('IHC', 'SOC') returning id")
+    r = Publicador(banco, cfg(), fonte(banco, "grade"), None).grade(grade_conferida(), banco.cursos(TENANT), "2026/2")
+    assert r.mudancas == 4
+    assert aulas(banco, "00000000-0000-0000-0000-0000000000e5") != [(1, "19:00", "20:40", "Sala 8")]
+    conflito = q(banco, """select motivo, dados from curadoria where decisao is null
+                          and dados->>'nome_no_pdf' = 'SOC TEC'""")[0]
+    assert conflito["dados"]["ja_existe_em"]["semestre"] == 3 and conflito["dados"]["semestre"] == 4
+    assert "já existe" in conflito["motivo"] and "4º" in conflito["motivo"]
+
+
+def test_grade_exigindo_aprovacao_nao_publica_sozinha(banco):
+    r = Publicador(banco, cfg(exigir_aprovacao=True), fonte(banco, "grade"), None).grade(
+        grade_conferida(), banco.cursos(TENANT), "2026/2")
+    assert r.mudancas == 0 and r.pendentes == 30
+    assert {m["motivo"] for m in q(banco, "select motivo from curadoria where item_tipo = 'grade_turma'")} == {
+        "aguardando sua aprovação"}
+
+
 def test_grade_de_outro_periodo_fica_para_depois(banco):
     [g] = ler_pdf(pdf_de_posicoes("grade_ads_noturno_2026_2.tsv"))
     r = Publicador(banco, cfg(), fonte(banco, "grade"), None).grade(g, banco.cursos(TENANT), "2027/1")
     assert r.itens == 0 and "2026/2" in r.notas[0]
 
 
-def ev(titulo, tipo, inicio, fim=None, conf=0.95, cursos=()):
+def ev(titulo, tipo, inicio, fim=None, conf=0.95, cursos=(), confere=True):
     return EventoLido(titulo=titulo, tipo=tipo, inicio=inicio, fim=fim, confianca=conf, cursos=list(cursos),
-                      documento_url="https://www.fatecid.com.br/site/wp-content/uploads/2026/08/Calendario-2026.pdf")
+                      documento_url="https://www.fatecid.com.br/site/wp-content/uploads/2026/08/Calendario-2026.pdf",
+                      conferencia={"confere": confere, "detalhe": "a data confere com o documento" if confere
+                                   else "no documento: 16/10; a IA leu 15/10"})
 
 
 def test_calendario_novo_igual_mudou_e_sumiu(banco):
@@ -234,10 +302,18 @@ def test_worker_le_a_fonte_da_grade_e_atende_a_fila(banco, url):
         return httpx.Response(404, headers={"content-type": "text/html"}, text="não achei")
 
     c = cfg()
-    y = Archie(c, banco, Coletor("Teste", 0, transporte=httpx.MockTransport(site)), IAFalsa([]))
+    # A segunda leitura (a IA olhando a imagem) vê a mesma grade; nas releituras forçadas, também.
+    [lida] = ler_pdf(pdf)
+    resposta_ia = {"curso": lida.curso, "periodo": lida.periodo, "turno": lida.turno, "confianca": 0.9,
+                   "aulas": [{"semestre": a.semestre, "dia_semana": a.dia_semana, "inicio": a.inicio, "fim": a.fim,
+                              "disciplina": a.disciplina, "professor": a.professor, "sala": a.sala}
+                             for a in lida.aulas]}
+    ia = IAFalsa([copy.deepcopy(resposta_ia) for _ in range(3)])
+    y = Archie(c, banco, Coletor("Teste", 0, transporte=httpx.MockTransport(site)), ia)
     f = fonte(banco, "grade")
     resumo = y.processar_fonte(f)
     assert "ANÁLISE E DESENVOLVIMENTO DE SISTEMAS 2026/2: 6 atualizados, 24 para revisar" in resumo
+    assert len(ia.prompts) == 1  # a página foi lida também pela imagem
     assert not any(p.endswith("COMEX.pdf") for p in pedidos)  # curso fora do tenant nem é baixado
     f2 = fonte(banco, "grade")
     assert f2["status"] == "ativa" and f2["ultima_verificacao"] is not None and f2["ultimo_hash"]

@@ -7,7 +7,7 @@ export function useContadores(): Record<string, number> {
   const revisao = useQuery({ queryKey: ['revisao'], queryFn: listarRevisao, staleTime: 60_000 })
   const hoje = new Date().toISOString().slice(0, 10)
   return {
-    '/entrada': entrada.data?.length ?? 0,
+    '/arquivos': entrada.data?.length ?? 0,
     '/revisao': (revisao.data ?? []).filter((r) => r.proxima_em <= hoje).length,
   }
 }

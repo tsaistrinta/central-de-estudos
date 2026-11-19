@@ -22,6 +22,7 @@ Deno.serve(async (req) => {
   try {
     return json({ url: await urlAssinada('PUT', chave), chave })
   } catch (e) {
-    return json({ erro: 'Não foi possível preparar o envio.', detalhe: String(e) }, 500)
+    console.error('upload', e)
+    return json({ erro: 'Não foi possível preparar o envio.' }, 500)
   }
 })

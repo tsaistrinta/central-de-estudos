@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from datetime import date
 
 from archie import pdf
+from archie.conferencia import conferir_evento_no_texto
 from archie.extratores.eventos import EventoLido, validar_eventos
 
 ESQUEMA = {
@@ -112,4 +113,9 @@ def ler(dados: bytes, ia, unidade: str, url: str = "", hoje: date | None = None)
             brutos.append(e)
     cal.eventos, problemas = validar_eventos(brutos, ano=cal.ano, documento_url=url)
     cal.problemas += problemas
+    # Segunda leitura, sem IA: a data tem de estar escrita na linha que a IA citou.
+    for e in cal.eventos:
+        e.conferencia = conferir_evento_no_texto(e.inicio, e.fim, e.trecho, paginas)
+        if not e.pagina and e.conferencia.get("pagina"):
+            e.pagina = e.conferencia["pagina"]
     return cal

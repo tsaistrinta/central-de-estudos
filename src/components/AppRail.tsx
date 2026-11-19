@@ -10,7 +10,7 @@ const CURTO: Record<string, string> = {
   '/': 'Hoje',
   '/agenda': 'Agenda',
   '/materias': 'Matérias',
-  '/entrada': 'Entrada',
+  '/arquivos': 'Arquivos',
   '/tarefas': 'Tarefas',
   '/revisao': 'Revisão',
   '/notas': 'Notas',

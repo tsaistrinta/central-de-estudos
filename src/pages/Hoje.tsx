@@ -1,10 +1,10 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { CalendarDays, Inbox, MapPin, Sparkles } from 'lucide-react'
+import { CalendarDays, FolderOpen, MapPin, Sparkles } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { useAgora } from '@/lib/useAgora'
-import { EtiquetaEvento, SeloStatus, SeloArchie } from '@/components/foco/Selos'
+import { EtiquetaEvento, LinkFonte, SeloStatus, SeloArchie } from '@/components/foco/Selos'
 import { Cartao, Esqueleto, PontoMateria, Vazio } from '@/components/foco/Base'
 import { useDadosAgenda } from '@/components/agenda/useDadosAgenda'
 import { listarPropostas, votosDe } from '@/api/comunidade'
@@ -61,8 +61,8 @@ export default function Hoje() {
           </h1>
         </div>
         <div className="flex gap-2">
-          <Link to="/entrada" className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3.5 text-sm font-medium hover:bg-muted">
-            <Inbox size={16} strokeWidth={1.75} /> Caixa de entrada
+          <Link to="/arquivos" className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3.5 text-sm font-medium hover:bg-muted">
+            <FolderOpen size={16} strokeWidth={1.75} /> Meus arquivos
           </Link>
           <Link to="/agenda" className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-3.5 text-sm font-medium text-primary-foreground hover:bg-primary-hover">
             <CalendarDays size={16} strokeWidth={1.75} /> Abrir agenda
@@ -132,6 +132,11 @@ export default function Hoje() {
                       </span>
                     )}
                   </span>
+                  {i.tipo === 'aula' ? (
+                    <LinkFonte url={i.turma?.horario_fonte_url} pagina={i.turma?.horario_pagina} rotulo="Grade" className="hidden sm:inline-flex" />
+                  ) : (
+                    i.evento?.escopo !== 'pessoal' && <LinkFonte url={i.evento?.documento_url} className="hidden sm:inline-flex" />
+                  )}
                 </li>
               ))}
             </ul>
@@ -151,6 +156,8 @@ export default function Hoje() {
                   {i.estilo === 'entrega' && <EtiquetaEvento tipo="entrega" />}
                   <span className="min-w-0 flex-1 truncate text-sm font-medium">{i.titulo}</span>
                   {i.tipo === 'proposta' && <SeloStatus status="nao_confirmado" />}
+                  {i.evento?.status && i.evento.escopo !== 'pessoal' && <SeloStatus status={i.evento.status} />}
+                  <LinkFonte url={i.evento?.documento_url} rotulo="Fonte" className="hidden md:inline-flex" />
                   <span className="text-[11.5px] text-muted-foreground">em {Math.max(0, Math.ceil((i.inicio.getTime() - agora.getTime()) / 864e5))} d</span>
                 </li>
               ))}

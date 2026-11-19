@@ -50,6 +50,7 @@ class Grade:
     problemas: list[str] = field(default_factory=list)
     metodo: str = "posicao"
     confianca: float = 0.0
+    conferencia: dict | None = None  # comparação com a segunda leitura (archie.conferencia)
 
     def como_dict(self) -> dict:
         return asdict(self)

@@ -85,8 +85,8 @@ const disciplinas: Disciplina[] = [
   { id: 'd-poo', curso_id: CURSO, nome: 'Programação Orientada a Objetos', sigla: 'POO', semestre_matriz: 3, cor: 'laranja' },
   { id: 'd-est', curso_id: CURSO, nome: 'Estatística', sigla: 'EST', semestre_matriz: 3, cor: 'petroleo' },
   { id: 'd-es2', curso_id: CURSO, nome: 'Engenharia de Software II', sigla: 'ES II', semestre_matriz: 3, cor: 'roxo' },
-  { id: 'd-ihc', curso_id: CURSO, nome: 'Interação Humano-Computador', sigla: 'IHC', semestre_matriz: 3, cor: 'framboesa' },
-  { id: 'd-soc', curso_id: CURSO, nome: 'Sociedade e Tecnologia', sigla: 'SOC', semestre_matriz: 3, cor: 'mostarda' },
+  { id: 'd-ihc', curso_id: CURSO, nome: 'Interação Humano-Computador', sigla: 'IHC', semestre_matriz: 4, cor: 'framboesa' },
+  { id: 'd-soc', curso_id: CURSO, nome: 'Sociedade e Tecnologia', sigla: 'SOC', semestre_matriz: 4, cor: 'mostarda' },
   { id: 'd-bd', curso_id: CURSO, nome: 'Banco de Dados', sigla: 'BD', semestre_matriz: 3, cor: 'azul' },
   // De outros semestres (para "Adicionar matéria": dependência ou aproveitamento).
   { id: 'd-ed', curso_id: CURSO, nome: 'Estrutura de Dados', sigla: 'ED', semestre_matriz: 4, cor: 'verde' },
@@ -116,6 +116,8 @@ const turmas: Turma[] = disciplinas.map((d) => ({
   professor_nome: professores[d.id],
   professor_id: d.id === 'd-est' ? 'p-carlos' : null,
   tamanho_real: 40,
+  horario_fonte_url: 'https://www.fatecid.com.br/site/wp-content/uploads/2026/08/ADS_NOT.pdf',
+  horario_pagina: 1,
 }))
 
 const aulas: AulaHorario[] = [

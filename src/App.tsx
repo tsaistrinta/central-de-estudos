@@ -12,7 +12,7 @@ import Legal from './pages/Legal'
 import Hoje from './pages/Hoje'
 import Materias from './pages/Materias'
 import Materia from './pages/Materia'
-import Entrada from './pages/Entrada'
+import MeusArquivos from './pages/MeusArquivos'
 import Tarefas from './pages/Tarefas'
 import Revisar from './pages/Revisar'
 import Curso from './pages/Curso'
@@ -53,7 +53,8 @@ export default function App() {
           <Route path="agenda" element={<Agenda />} />
           <Route path="materias" element={<Materias />} />
           <Route path="materias/:id" element={<Materia />} />
-          <Route path="entrada" element={<Entrada />} />
+          <Route path="arquivos" element={<MeusArquivos />} />
+          <Route path="entrada" element={<Navigate to="/arquivos" replace />} />
           <Route path="tarefas" element={<Tarefas />} />
           <Route path="revisao" element={<Revisar />} />
           <Route path="notas" element={<Notas />} />

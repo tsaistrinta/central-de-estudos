@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date
 
+from archie.conferencia import conferir_evento_na_transcricao
 from archie.extratores.eventos import EventoLido, validar_eventos
 
 ESQUEMA = {
@@ -48,6 +49,16 @@ PROMPT = """Esta imagem está publicada na página inicial do site da {unidade}.
 Não invente nada que não esteja na imagem."""
 
 
+ESQUEMA_TRANSCRICAO = {
+    "type": "object",
+    "properties": {"texto": {"type": "string", "description": "todo o texto escrito na imagem, palavra por palavra"}},
+    "required": ["texto"],
+}
+
+PROMPT_TRANSCRICAO = """Transcreva, palavra por palavra e na ordem, todo o texto escrito nesta imagem.
+Copie números e datas exatamente como aparecem. Não resuma, não explique e não acrescente nada."""
+
+
 @dataclass
 class Aviso:
     url: str
@@ -57,6 +68,7 @@ class Aviso:
     eventos: list[EventoLido] = field(default_factory=list)
     confianca: float = 0.0
     problemas: list[str] = field(default_factory=list)
+    transcricao: str = ""
 
 
 def ler(imagem: bytes, url: str, ia, unidade: str, hoje: date) -> Aviso:
@@ -65,6 +77,13 @@ def ler(imagem: bytes, url: str, ia, unidade: str, hoje: date) -> Aviso:
     # Imagem nunca publica sozinha como oficial: no máximo "provável", e o admin confere.
     eventos, problemas = validar_eventos(resp.get("eventos", []), ano=hoje.year, documento_url=url,
                                          teto_confianca=0.8)
-    return Aviso(url=url, para_alunos=bool(resp.get("para_alunos")), titulo=str(resp.get("titulo") or "")[:140],
-                 resumo=str(resp.get("resumo") or ""), eventos=eventos if resp.get("para_alunos") else [],
-                 confianca=min(float(resp.get("confianca") or 0.5), 0.8), problemas=problemas)
+    aviso = Aviso(url=url, para_alunos=bool(resp.get("para_alunos")), titulo=str(resp.get("titulo") or "")[:140],
+                  resumo=str(resp.get("resumo") or ""), eventos=eventos if resp.get("para_alunos") else [],
+                  confianca=min(float(resp.get("confianca") or 0.5), 0.8), problemas=problemas)
+    if aviso.eventos:
+        # Segunda leitura: outra passada só transcreve a imagem; cada data tem de aparecer nela.
+        aviso.transcricao = str(ia.json(PROMPT_TRANSCRICAO, ESQUEMA_TRANSCRICAO, imagens=[imagem], visao=True)
+                                .get("texto") or "")
+        for e in aviso.eventos:
+            e.conferencia = conferir_evento_na_transcricao(e.inicio, e.fim, aviso.transcricao)
+    return aviso

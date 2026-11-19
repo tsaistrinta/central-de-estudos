@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { linkDaFonte } from '@/lib/fonte'
 import { useQuery } from '@tanstack/react-query'
 import { ExternalLink } from 'lucide-react'
 import { tenantAtual } from '@/api/academico'
@@ -28,7 +29,7 @@ export default function EventosOficiais({ escopo, titulo }: { escopo: EscopoEven
       <PilulaEvento tipo={e.tipo} />
       {e.origem === 'archie' ? <SeloArchie rotulo="Captado do site" /> : <SeloStatus status={e.status} />}
       {e.documento_url && (
-        <a href={e.documento_url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary" aria-label="Ver a fonte">
+        <a href={linkDaFonte(e.documento_url)} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-primary" aria-label="Ver a fonte">
           <ExternalLink size={14} />
         </a>
       )}

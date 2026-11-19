@@ -16,6 +16,7 @@ Deno.serve(async (req) => {
   try {
     return json({ url: await urlAssinada('GET', chave, 300) })
   } catch (e) {
-    return json({ erro: 'Não foi possível abrir o arquivo.', detalhe: String(e) }, 500)
+    console.error('download', e)
+    return json({ erro: 'Não foi possível abrir o arquivo.' }, 500)
   }
 })

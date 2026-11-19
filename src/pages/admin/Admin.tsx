@@ -12,7 +12,7 @@ import { useAuth } from '@/lib/auth'
 import { ROTULO_PAPEL, tempoRelativo } from '@/lib/pessoas'
 import { cn } from '@/lib/utils'
 import { DIAS_CURTOS, EFEITO_APROVAR, ROTULO_CURADORIA, ROTULO_EXTRATOR, workerNoAr } from '@/lib/archie'
-import type { ExtratorFonte, Fonte, ItemCuradoria, Papel } from '@/types'
+import type { ConferenciaArchie, ExtratorFonte, Fonte, ItemCuradoria, Papel } from '@/types'
 import { CodigoDaTurmaCelula, PedidosDeEntrada, Quarentena } from './Moderacao'
 
 // Telas 14–18 · Painel do dono da plataforma.
@@ -184,8 +184,30 @@ function Aulas({ aulas }: { aulas?: { dia_semana: number; inicio: string; fim: s
   )
 }
 
+function DuplaLeitura({ c }: { c?: ConferenciaArchie | null }) {
+  if (!c) return null
+  const confere = !!c.confere
+  return (
+    <div className={`rounded-md border p-2.5 text-[13px] ${confere ? 'border-success/30 bg-success-soft' : 'border-warning/30 bg-warning-soft'}`}>
+      <p className={`flex items-center gap-1.5 font-medium ${confere ? 'text-success' : 'text-warning'}`}>
+        {confere ? <Check size={14} /> : <X size={14} />}
+        {confere ? 'As duas leituras batem' : 'As leituras não batem'}
+        {c.detalhe && <span className="font-normal text-muted-foreground">· {c.detalhe}</span>}
+      </p>
+      {(c.posicao || c.imagem) && (
+        <div className="mt-1.5 grid gap-1">
+          <div><span className="inline-block w-40 text-xs text-muted-foreground">Leitura do texto (sem IA)</span>{c.posicao ?? '—'}</div>
+          <div><span className="inline-block w-40 text-xs text-muted-foreground">Leitura da imagem (IA)</span>{c.imagem ?? '—'}</div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function ItemArchie({ item, onDecidir, ocupado }: { item: ItemCuradoria; onDecidir?: (aprovar: boolean) => void; ocupado?: boolean }) {
-  const fonte = item.dados.documento_url ?? item.dados.evento?.documento_url
+  const documento = item.dados.documento_url ?? item.dados.evento?.documento_url
+  const pagina = item.dados.pagina ?? item.dados.conferencia?.pagina
+  const fonte = documento && pagina && /\.pdf($|\?)/i.test(documento) ? `${documento}#page=${pagina}` : documento
   const confianca = item.confianca != null ? Math.round(Number(item.confianca) * 100) : null
   return (
     <div className="space-y-2 p-4">
@@ -207,11 +229,17 @@ function ItemArchie({ item, onDecidir, ocupado }: { item: ItemCuradoria; onDecid
         </div>
       )}
       {item.dados.trecho && <p className="rounded-md bg-background px-2.5 py-1.5 font-mono text-xs text-muted-foreground">“{item.dados.trecho}”</p>}
+      <DuplaLeitura c={item.dados.conferencia} />
+      {item.dados.ja_existe_em && (
+        <p className="rounded-md bg-warning-soft px-2.5 py-1.5 text-[13px] text-warning">
+          Já existe “{item.dados.ja_existe_em.nome}” no {item.dados.ja_existe_em.semestre}º semestre. O documento mostra no {item.dados.semestre}º. Aprovar cria outra disciplina; se o cadastro antigo estiver errado, corrija o semestre em Turmas.
+        </p>
+      )}
       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
         {item.motivo && <span>{item.motivo}</span>}
         {fonte && (
           <a href={fonte} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 hover:text-primary">
-            ver a fonte <ExternalLink size={11} />
+            ver a fonte{pagina ? ` (pág. ${pagina})` : ''} <ExternalLink size={11} />
           </a>
         )}
       </div>

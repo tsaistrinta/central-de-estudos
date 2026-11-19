@@ -16,8 +16,8 @@ insert into public.disciplinas (id, curso_id, nome, sigla, semestre_matriz, cor)
   ('00000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-0000000000a1', 'Programação Orientada a Objetos', 'POO', 3, 'laranja'),
   ('00000000-0000-0000-0000-0000000000d2', '00000000-0000-0000-0000-0000000000a1', 'Estatística', 'EST', 3, 'petroleo'),
   ('00000000-0000-0000-0000-0000000000d3', '00000000-0000-0000-0000-0000000000a1', 'Engenharia de Software II', 'ES II', 3, 'roxo'),
-  ('00000000-0000-0000-0000-0000000000d4', '00000000-0000-0000-0000-0000000000a1', 'Interação Humano-Computador', 'IHC', 3, 'framboesa'),
-  ('00000000-0000-0000-0000-0000000000d5', '00000000-0000-0000-0000-0000000000a1', 'Sociedade e Tecnologia', 'SOC', 3, 'mostarda'),
+  ('00000000-0000-0000-0000-0000000000d4', '00000000-0000-0000-0000-0000000000a1', 'Interação Humano-Computador', 'IHC', 4, 'framboesa'),
+  ('00000000-0000-0000-0000-0000000000d5', '00000000-0000-0000-0000-0000000000a1', 'Sociedade e Tecnologia', 'SOC', 4, 'mostarda'),
   ('00000000-0000-0000-0000-0000000000d6', '00000000-0000-0000-0000-0000000000a1', 'Banco de Dados', 'BD', 3, 'azul');
 
 insert into public.turmas (id, disciplina_id, periodo_letivo, turno, professor_nome, tamanho_real, fonte) values

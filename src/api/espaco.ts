@@ -1,14 +1,15 @@
-// Espaço pessoal: materiais (e caixa de entrada), tarefas, revisão, avaliações, notas e frequência.
+// Espaço pessoal: materiais (e Meus arquivos), tarefas, revisão, avaliações, notas e frequência.
 
 import type { Avaliacao, ColunaTarefa, Frequencia, ItemRevisao, Material, Nota, Tarefa } from '@/types'
 import { db, meuId, modoDemo, ok } from './base'
 import { demo, espera, novoId } from './demo'
 
 // ---------- Materiais ----------
-export async function listarMateriais(filtro: { disciplinaId?: string; turmaId?: string; entrada?: boolean }): Promise<Material[]> {
+export async function listarMateriais(filtro: { disciplinaId?: string; turmaId?: string; entrada?: boolean; meus?: boolean }): Promise<Material[]> {
   if (modoDemo) {
     return espera(
       demo.materiais
+        .filter((m) => !filtro.meus || m.dono_id === demo.perfil.id)
         .filter((m) => (filtro.entrada === undefined ? true : m.na_entrada === filtro.entrada))
         .filter((m) => !filtro.disciplinaId || m.disciplina_id === filtro.disciplinaId)
         .filter((m) => !filtro.turmaId || m.turma_id === filtro.turmaId)
@@ -16,6 +17,7 @@ export async function listarMateriais(filtro: { disciplinaId?: string; turmaId?:
     )
   }
   let q = db().from('materiais').select('*').order('criado_em', { ascending: false })
+  if (filtro.meus) q = q.eq('dono_id', await meuId())
   if (filtro.entrada !== undefined) q = q.eq('na_entrada', filtro.entrada)
   if (filtro.disciplinaId) q = q.eq('disciplina_id', filtro.disciplinaId)
   if (filtro.turmaId) q = q.eq('turma_id', filtro.turmaId)

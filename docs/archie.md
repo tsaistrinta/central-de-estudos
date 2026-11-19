@@ -27,6 +27,23 @@ o 3º tem Inglês III, Economia e Finanças e G.G.T.I.). Os testes usam as posi�
 
 ## Regras de publicação
 
+**Dupla leitura (desde 19/11/2026).** Nada é publicado sozinho com uma leitura só. Cada documento é lido por dois
+caminhos independentes (`archie/conferencia.py`):
+
+- **Grade de horários:** leitura pela posição do texto no PDF (sem IA) × leitura da imagem da página (IA).
+  Compara disciplina por disciplina: semestre, dias, horários, sala e professor.
+- **Calendário:** a IA lê o texto; um conferente sem IA acha no documento a linha que ela citou, lê o dia no começo
+  da linha e o mês do cabeçalho acima, e compara com a data devolvida.
+- **Aviso em imagem:** a IA lê o aviso; numa segunda passada só transcreve a imagem, e cada data tem de aparecer
+  na transcrição.
+
+Se as leituras não batem, o item **não chega aos alunos**: fica na curadoria com as duas versões lado a lado e o link
+da fonte (com a página do PDF). Uma disciplina da grade só é ligada a uma disciplina **do mesmo semestre**; nome igual
+em outro semestre vira pendência ("já existe no 3º, o PDF mostra no 4º"), e duas disciplinas do PDF nunca são
+juntadas numa turma só. `ARCHIE_EXIGIR_APROVACAO=true` faz tudo passar pelo admin.
+
+Com as leituras batendo:
+
 - **≥ 0,85** → publica sozinho como **Oficial**, com o link da fonte (`eventos.origem = 'archie'`, `fonte_id`, `documento_url`).
 - **≥ 0,6** → publica como **Provável** e abre um item na curadoria.
 - **< 0,6** → não publica; só o item na curadoria.

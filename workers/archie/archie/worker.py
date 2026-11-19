@@ -10,7 +10,7 @@ from datetime import date, datetime, timezone
 from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
-from archie import moderacao, pdf
+from archie import conferencia, moderacao, pdf
 from archie.banco import Banco
 from archie.coletor import (ColetaRecusada, Coletor, Resposta, assinatura_da_pagina, imagens, links_de_documento,
                           texto_principal)
@@ -204,16 +204,33 @@ class Archie:
         return f"calendário {cal.ano}: {r.resumo()}"
 
     def _grade(self, fonte, tenant, cursos, url, dados: bytes, h: str) -> str:
+        """Dupla leitura de cada página: pela posição do texto (sem IA) e pela imagem (IA). Compara as duas."""
         grades = grade.ler_pdf(dados)
         resumos = []
         with self.banco.transacao():
             cid = self.banco.registrar_captura(str(fonte["id"]), h, url, titulo=_nome_arquivo(url),
                                                itens=sum(len(g.aulas) for g in grades))
             for n, g in enumerate(grades):
-                if g.problemas or not g.aulas:
-                    log.info("  leitura por posição falhou (%s); tentando pela imagem", "; ".join(g.problemas))
-                    g = grade.ler_com_ia(dados, self.ia, pagina=n)
-                r = Publicador(self.banco, self.cfg, fonte, cid).grade(g, cursos, tenant["periodo_atual"])
+                pela_posicao = None if (g.problemas or not g.aulas) else g
+                try:
+                    pela_imagem = grade.ler_com_ia(dados, self.ia, pagina=n)
+                except IAIndisponivel as e:
+                    pela_imagem = None
+                    log.warning("  sem a leitura pela imagem agora (%s)", e)
+                if pela_posicao and pela_imagem:
+                    g = pela_posicao
+                    g.conferencia = conferencia.comparar_grades(pela_posicao, pela_imagem)
+                elif pela_posicao:
+                    g.conferencia = conferencia.uma_leitura("só a leitura pela posição (a IA não respondeu)")
+                elif pela_imagem:
+                    g = pela_imagem
+                    g.conferencia = conferencia.uma_leitura(
+                        "só a leitura pela imagem; a leitura pela posição falhou: " + "; ".join(g.problemas or []))
+                else:
+                    resumos.append(f"página {n + 1}: nenhuma leitura funcionou")
+                    continue
+                r = Publicador(self.banco, self.cfg, fonte, cid).grade(g, cursos, tenant["periodo_atual"],
+                                                                       documento_url=url, pagina=n + 1)
                 resumos.append(f"{g.curso} {g.periodo or ''}: {r.resumo()}" + (f" ({'; '.join(r.notas)})" if r.notas else ""))
         return " | ".join(resumos)
 

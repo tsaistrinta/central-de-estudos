@@ -38,6 +38,7 @@ class Config:
     conf_alta: float  # a partir daqui publica sozinho como oficial
     conf_media: float  # a partir daqui publica como provável + curadoria
     auto_estrutura: bool  # criar disciplinas/turmas novas sem passar pelo admin
+    exigir_aprovacao: bool  # true = nada é publicado sem o ok do admin; false = publica sozinho quando as duas leituras batem
     conhecimento: bool  # guardar trechos com embedding para a busca (RAG)
     fuso: str
     max_bytes: int
@@ -63,6 +64,7 @@ class Config:
             conf_alta=float(e("ARCHIE_CONF_ALTA", "0.85")),
             conf_media=float(e("ARCHIE_CONF_MEDIA", "0.6")),
             auto_estrutura=_bool("ARCHIE_AUTO_ESTRUTURA", False),
+            exigir_aprovacao=_bool("ARCHIE_EXIGIR_APROVACAO", False),
             conhecimento=_bool("ARCHIE_CONHECIMENTO", True),
             fuso=e("ARCHIE_FUSO", "America/Sao_Paulo"),
             max_bytes=int(e("ARCHIE_MAX_MB", "25")) * 1024 * 1024,

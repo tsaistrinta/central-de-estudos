@@ -111,7 +111,10 @@ export async function entrarComCodigo(codigo: string): Promise<string> {
     demo.pedidos = demo.pedidos.map((p) => (p.turma_id === turma && p.usuario_id === demo.perfil.id && p.status === 'pendente' ? { ...p, status: 'aprovado' } : p))
     return espera(turma)
   }
-  return ok(await db().rpc('entrar_com_codigo', { p_codigo: codigo }))
+  // Código errado volta null (e não erro), para a tentativa ficar registrada no limite de 8 por hora.
+  const turma = ok(await db().rpc('entrar_com_codigo', { p_codigo: codigo })) as string | null
+  if (!turma) throw new Error('codigo_invalido')
+  return turma
 }
 
 export async function meusPedidos(): Promise<PedidoTurma[]> {

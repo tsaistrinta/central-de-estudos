@@ -67,6 +67,10 @@ export interface Turma {
   professor_nome?: string | null
   professor_id?: string | null
   tamanho_real?: number | null
+  /** PDF da grade oficial de onde o Archie tirou o horário (e a página). */
+  horario_fonte_url?: string | null
+  horario_pagina?: number | null
+  horario_atualizado_em?: string | null
 }
 
 /** Turma com a disciplina embutida — o formato que as telas usam. */
@@ -274,6 +278,15 @@ export interface UltimaCaptura {
 export type TipoCuradoria = 'evento_novo' | 'evento_provavel' | 'evento_mudanca' | 'evento_sumiu' | 'grade_turma' | 'disciplina_nova'
 
 /** O que o Archie quis mudar. Pendente = decisao nula; aplicado sozinho = aprovado sem decidido_por. */
+/** Resultado da segunda leitura do Archie (dupla leitura): só publica sozinho o que "confere". */
+export interface ConferenciaArchie {
+  confere?: boolean
+  detalhe?: string
+  posicao?: string
+  imagem?: string
+  pagina?: number
+}
+
 export interface ItemCuradoria {
   id: string
   item_tipo: TipoCuradoria
@@ -286,6 +299,10 @@ export interface ItemCuradoria {
     antes?: { aulas: { dia_semana: number; inicio: string; fim: string; sala?: string | null }[]; professor_nome?: string | null }
     professor_nome?: string | null
     nome_no_pdf?: string
+    pagina?: number | null
+    semestre?: number | null
+    conferencia?: ConferenciaArchie | null
+    ja_existe_em?: { id: string; nome: string; semestre: number } | null
     [chave: string]: unknown
   }
   resumo?: string | null

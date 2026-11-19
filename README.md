@@ -26,7 +26,7 @@ Secretaria e coordenação não fazem nenhum trabalho extra. Quando o Archie nã
 
 - **Agenda no padrão Outlook:** dia, semana, mês e lista; camadas por disciplina e da Fatec; arrastar e redimensionar; criação por frase; link .ics para o Outlook, Google ou iPhone.
 - **Hoje:** resumo do dia do Archie, aulas, próximas provas e o que mudou.
-- **Espaço pessoal:** matérias e materiais, caixa de entrada, tarefas (Kanban), plano de revisão até a prova, notas e faltas.
+- **Espaço pessoal:** matérias e materiais, Meus arquivos, tarefas (Kanban), plano de revisão até a prova, notas e faltas.
 - **Comunidade:** turma com conversa, mural, materiais, dúvidas respondidas com fonte e **validação coletiva**.
 - **Painel admin:** fontes monitoradas, curadoria da IA, contas e papéis, servidor.
 - Cadastro só com e-mail institucional, confirmado por código. Interface clara (identidade **Foco**), responsiva e em português do Brasil.

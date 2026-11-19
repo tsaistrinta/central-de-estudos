@@ -5,6 +5,7 @@ import { ChevronRight, Plus, Users } from 'lucide-react'
 import { aulasDasTurmas, minhasTurmas } from '@/api/academico'
 import { listarMateriais } from '@/api/espaco'
 import { Cabecalho, Cartao, Esqueleto, Vazio } from '@/components/foco/Base'
+import { LinkFonte } from '@/components/foco/Selos'
 import { Button } from '@/components/ui/button'
 import ItemMaterial from '@/components/espaco/ItemMaterial'
 import NovoMaterial from '@/components/espaco/NovoMaterial'
@@ -85,6 +86,11 @@ export default function Materia() {
                   <span className="text-muted-foreground">{a.sala}</span>
                 </li>
               ))}
+              {turma.horario_fonte_url && (
+                <li className="pt-2.5">
+                  <LinkFonte url={turma.horario_fonte_url} pagina={turma.horario_pagina} rotulo="Grade oficial" />
+                </li>
+              )}
             </ul>
           )}
         </Cartao>

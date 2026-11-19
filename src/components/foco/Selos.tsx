@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
-import { Clock, ShieldCheck, Sparkles, Users, X } from 'lucide-react'
+import { Clock, ExternalLink, ShieldCheck, Sparkles, Users, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { linkDaFonte, nomeDaFonte } from '@/lib/fonte'
 import { TIPOS_EVENTO, type StatusInfo, type TipoEvento } from '@/lib/eventos'
 
 /** Pílula base: 11 px, semibold, raio 999. */
@@ -63,5 +64,23 @@ export function EtiquetaEvento({ tipo }: { tipo: 'prova' | 'entrega' }) {
     >
       {tipo === 'prova' ? 'PROVA' : 'ENTREGA'}
     </span>
+  )
+}
+
+/** Link da fonte oficial ("Fonte: ADS_NOT.pdf · pág. 1"), sempre que a informação foi captada. */
+export function LinkFonte({ url, pagina, rotulo, className }: { url?: string | null; pagina?: number | null; rotulo?: string; className?: string }) {
+  if (!url) return null
+  return (
+    <a
+      href={linkDaFonte(url, pagina)}
+      target="_blank"
+      rel="noreferrer"
+      className={cn('inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary hover:underline', className)}
+      title="Abrir o documento oficial"
+    >
+      <ExternalLink size={11} strokeWidth={1.75} />
+      {rotulo ?? 'Fonte'}: {nomeDaFonte(url)}
+      {pagina ? ` · pág. ${pagina}` : ''}
+    </a>
   )
 }

@@ -25,6 +25,7 @@ PTG de ADS da **Fatec Indaiatuba** (autor: Lucas Tsai). Plataforma de estudos qu
 - **Cadastro só com e-mail institucional** de domínio permitido do tenant (`@aluno.cps.sp.gov.br`), validado por **código de 6 dígitos** (OTP). Sem login social.
 - **Nunca** pedir ou guardar a senha do SIGA.
 - **Edição do aluno nunca é sobrescrita** pelo Archie: ele pergunta "a data oficial mudou, aplicar?" (`evento_override`).
+- **Dupla leitura:** o Archie só publica sozinho o que leu igual por dois caminhos independentes (texto sem IA × IA); o que diverge fica na curadoria com as duas versões (`workers/archie/archie/conferencia.py`).
 - **Toda informação captada mostra a origem** (selo + link da fonte): Oficial · Provável · Esperando a turma · Confirmado pela turma · Descartado.
 - **Validação coletiva:** base = vagas da turma no site (`turmas.tamanho_real`) ou, se nulo, membros da turma. Confirma com sim ≥ max(5, 25% da base) **e** sim ≥ 80% dos votos. Descarta se não > 50% com quórum ou após 72 h. Professor ou fonte oficial fecham na hora. Só alunos matriculados votam; votos visíveis (avatares, clique mostra a lista).
 - **Reações:** um componente único com lista de quem reagiu (mural, conversa, dúvidas, materiais).
@@ -52,7 +53,7 @@ O front **nunca** recebe credenciais do R2 nem a service role.
 ### 2.1 Identidade Foco
 - Tokens em `src/index.css` (padrão shadcn) — **fonte de verdade**. Geist / Geist Mono. Ação: `#2f4ad0` (hover `#2740b8`, suave `#eaeefc` = `accent`). Superfícies escuras: `--dark: #14275a`.
 - 8 cores de matéria (`cobalto` … `roxo`) e 11 de tipo de evento (`--evt-*`, pílula com fundo a 13%).
-- Sidebar fixa **224 px** com "Meu espaço · privado" (Hoje, Agenda, Minhas matérias, Caixa de entrada, Tarefas, Revisão, Notas e faltas) e "Comunidade" (Minha turma, Meu curso, Fatec · unidade, disciplinas). **Na Agenda vira trilho de ícones de 68 px** (`AppRail`).
+- Sidebar fixa **224 px** com "Meu espaço · privado" (Hoje, Agenda, Minhas matérias, Meus arquivos, Tarefas, Revisão, Notas e faltas) e "Comunidade" (Minha turma, Meu curso, Fatec · unidade, disciplinas). **Na Agenda vira trilho de ícones de 68 px** (`AppRail`).
 - Raio 8 cartões, 6 botões/campos, 12 modais, 999 pílulas. Controles 34–36 px. Ícones Lucide traço 1.75.
 - Componentes Foco em `src/components/foco/` (`SeloStatus`, `SeloArchie`, `PilulaEvento`, `EtiquetaEvento`).
 
@@ -65,7 +66,7 @@ O front **nunca** recebe credenciais do R2 nem a service role.
 | `/` | 03 · Hoje |
 | `/agenda?visao=dia\|semana-util\|semana\|mes\|lista` | 20–25 |
 | `/materias`, `/materias/:id` | 09 |
-| `/entrada` | 04 · Caixa de entrada |
+| `/arquivos` (antes `/entrada`) | 04 · Meus arquivos |
 | `/tarefas` | 06 |
 | `/revisao` | 05 · Plano até a prova |
 | `/notas` | 07 |
@@ -92,6 +93,8 @@ Telas do professor (12–13) entram na Fase 4. Novo evento (23) e cartão do eve
 Schema em `supabase/migrations/20261027000000_schema_inicial.sql` (testado no Postgres 16 com RLS) + `supabase/seed.sql` (Indaiatuba/ADS 2026/2, provisório) + `20261103000001_archie.sql` (pgvector, pgmq, pg_cron) + `20261116000000_archie_v1.sql` (Fase 5: `fontes.extrator`, `capturas`, curadoria aplicável, `archie_status`, view `ultimas_capturas`).
 
 Tabelas: `tenants`, `cursos`, `perfis` (papel, curso, semestre, turno, onboarding), `disciplinas` (cor), `turmas` (`tamanho_real`, `professor_id`), `matriculas`, `aulas_horario`, `eventos` (escopo unidade/curso/turma/pessoal, origem, status, cancelado, rrule, lembretes), `evento_override`, `agenda_preferencias` (camadas ocultas, `ics_token`), `materiais` (R2, `na_entrada`, `oficial`), `tarefas`, `revisao_itens` (SM-2), `avaliacoes`, `notas`, `frequencia`, `mensagens` (canal `avisos` só professor), `duvidas`, `respostas`, `propostas`, `votos`, `reacoes`, `fontes`, `capturas`, `curadoria`, `notificacoes`, `auditoria`. View `pessoas` (nome e papel sem e-mail).
+
+Migrações de 19/11: `20261119000000_fontes_oficiais.sql` (PPC, matrizes, conteúdo programático, corpo docente), `20261119000100_fonte_do_horario.sql` (`turmas.horario_fonte_url/horario_pagina`, preenchidos ao aplicar a grade), `20261119000200_limite_de_codigos.sql` (o limite de 8 códigos errados por hora não funcionava: o erro desfazia o registro).
 
 Migração `20261118000000_entrada_e_acervo.sql`: `turma_codigos`, `pedidos_turma`, `tentativas_codigo`, `acervo_itens`, `acervo_denuncias`; funções `pedir_entrada`, `entrar_com_codigo`, `decidir_pedido`, `gerar_codigo_turma`, `pedidos_pendentes`, `cursa_disciplina`, `archie_moderar` (interna), `decidir_quarentena`, `listar_quarentena`; a política "matriculas: entrar" foi removida.
 
@@ -137,9 +140,9 @@ Antes de concluir qualquer tarefa: `npm run lint && npm run build`.
 - [x] **Fase 0 · Preparação** — repo reaproveitado, CLAUDE.md novo, mockups em `docs/design/`.
 - [x] **Fase 1 · Fundação web** — navegação nova (sidebar + trilho), rotas novas com stubs, componentes Foco, casca da agenda.
 - [x] **Fase 2 · Supabase e contas** — schema novo com RLS, cadastro por código (OTP) com domínio do tenant, seed Indaiatuba/ADS, onboarding por turma. *Falta: o Lucas aplicar no Supabase.*
-- [x] **Fase 3 · Espaço pessoal** — agenda Outlook (dia, semana útil, semana, mês, lista; cartão; frase; arrastar; camadas; atalhos; .ics), Hoje com dados, matérias/materiais (upload R2), caixa de entrada, tarefas Kanban, revisão espaçada, notas e faltas (Fui/Faltei). *Falta: publicar as Edge Functions do R2 e do .ics.*
+- [x] **Fase 3 · Espaço pessoal** — agenda Outlook (dia, semana útil, semana, mês, lista; cartão; frase; arrastar; camadas; atalhos; .ics), Hoje com dados, matérias/materiais (upload R2), Meus arquivos (antes "Caixa de entrada"), tarefas Kanban, revisão espaçada, notas e faltas (Fui/Faltei). *Falta: publicar as Edge Functions do R2 e do .ics.*
 - [x] **Fase 4 · Comunidade** — turma (conversa com canais e Realtime, mural do professor, materiais, dúvidas, confirmações com votos visíveis, membros, entrar em outras turmas), reações com "ver quem", curso e unidade, admin (visão, fontes, curadoria, contas e pedidos de professor, turmas/vagas/professor, servidor), layout de celular.
-- [x] **Fase 5 · Archie v1** — `workers/archie`: coletor (robots.txt, 5 s por pedido, hash por documento), calendário (IA com JSON), grade de horários (leitura pela posição do texto, IA por imagem de reserva), avisos em imagem (visão), base de conhecimento com embeddings; publicação por confiança com curadoria; admin com curadoria do Archie, "Verificar agora" e status do worker. 22 testes (pytest, Postgres 16). *Falta: ligar extensões + migração, Ollama e o `.env` do worker (`docs/archie.md`); pedir à TI para liberar o coletor se o site responder 403.*
+- [x] **Fase 5 · Archie v1** — dupla leitura com publicação automática (19/11); 79 testes, incluindo 30 de segurança do banco (RLS por papel). `workers/archie`: coletor (robots.txt, 5 s por pedido, hash por documento), calendário (IA com JSON), grade de horários (leitura pela posição do texto, IA por imagem de reserva), avisos em imagem (visão), base de conhecimento com embeddings; publicação por confiança com curadoria; admin com curadoria do Archie, "Verificar agora" e status do worker. 22 testes (pytest, Postgres 16). *Falta: ligar extensões + migração, Ollama e o `.env` do worker (`docs/archie.md`); pedir à TI para liberar o coletor se o site responder 403.*
 - [ ] **Fase 6 · Archie v2** — caixa de entrada, plano de ensino, SIGA, RAG, resumo diário.
 - [ ] **Fase 7 · Painel admin** — básico já existe; falta auditoria/LGPD e estatísticas do piloto.
 - [ ] **Fase 8 · PWA, deploy, piloto.**

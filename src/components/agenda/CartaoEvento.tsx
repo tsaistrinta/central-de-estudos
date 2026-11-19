@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Bell, BookOpen, Check, ExternalLink, KanbanSquare, MapPin, Pencil, RefreshCw, Sparkles, Trash2, User, Users, X } from 'lucide-react'
 import { PilulaEvento, SeloStatus, SeloArchie } from '@/components/foco/Selos'
+import { linkDaFonte, nomeDaFonte } from '@/lib/fonte'
 import Votacao from '@/components/comunidade/Votacao'
 import { apagarEvento } from '@/api/agenda'
 import { criarTarefa, marcarPresenca } from '@/api/espaco'
@@ -132,8 +133,15 @@ export default function CartaoEvento({ item, posicao, onFechar, onEditar, onProp
         {e?.descricao && <Linha icone={<BookOpen size={15} strokeWidth={1.75} />}>{e.descricao}</Linha>}
         {e?.documento_url && (
           <Linha icone={<ExternalLink size={15} strokeWidth={1.75} />}>
-            <a href={e.documento_url} target="_blank" rel="noreferrer" className="text-primary hover:underline">
-              Ver a fonte no site da Fatec
+            <a href={linkDaFonte(e.documento_url)} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+              Ver a fonte oficial · {nomeDaFonte(e.documento_url)}
+            </a>
+          </Linha>
+        )}
+        {item.tipo === 'aula' && t?.horario_fonte_url && (
+          <Linha icone={<ExternalLink size={15} strokeWidth={1.75} />}>
+            <a href={linkDaFonte(t.horario_fonte_url, t.horario_pagina)} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+              Horário da grade oficial · {nomeDaFonte(t.horario_fonte_url)}
             </a>
           </Linha>
         )}
