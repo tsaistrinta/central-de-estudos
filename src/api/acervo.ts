@@ -79,7 +79,7 @@ export async function listarQuarentena(): Promise<ItemQuarentena[]> {
         .map(({ disciplina_id, ...item }) => {
           const { periodo_origem, ...i } = item
           void periodo_origem
-          const nome = nomes.get(i.autor_id) ?? 'Aluno'
+          const nome = i.autor_id ? (nomes.get(i.autor_id) ?? 'Aluno') : 'Ex-aluno'
           return {
             ...i,
             disciplina: demo.disciplinas.find((d) => d.id === disciplina_id)?.nome ?? '',

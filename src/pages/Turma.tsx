@@ -73,7 +73,7 @@ function Mensagens({ turma, canal, pessoas, podeEscrever }: { turma: MinhaTurma;
         {msgs.isLoading && <Esqueleto />}
         {!msgs.isLoading && !msgs.data?.length && <p className="py-10 text-center text-sm text-muted-foreground">{canal === 'avisos' ? 'Nenhum aviso do professor ainda.' : 'Comece a conversa da turma.'}</p>}
         {msgs.data?.map((m) => {
-          const autor = pessoas.get(m.autor_id)
+          const autor = m.autor_id ? pessoas.get(m.autor_id) : undefined
           const entendida = /prova|p1|p2|entrega|trabalho|aula/i.test(m.texto) ? entenderFrase(m.texto, [turma.disciplina]) : null
           const sugereData = entendida?.inicio && (entendida.tipo === 'prova' || entendida.tipo === 'entrega' || entendida.tipo === 'trabalho')
           if (entendida) {
@@ -82,10 +82,10 @@ function Mensagens({ turma, canal, pessoas, podeEscrever }: { turma: MinhaTurma;
           }
           return (
             <div key={m.id} className="flex gap-3">
-              <Avatar id={m.autor_id} pessoa={autor} tamanho={34} />
+              <Avatar id={m.autor_id ?? 'ex-aluno'} pessoa={autor} tamanho={34} />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <b className="text-[13.5px]">{autor?.nome ?? 'Alguém da turma'}</b>
+                  <b className="text-[13.5px]">{m.autor_id ? (autor?.nome ?? 'Alguém da turma') : 'Ex-aluno'}</b>
                   <PapelPill p={autor} />
                   <span className="text-xs text-muted-foreground">{tempoRelativo(m.criado_em)}</span>
                   {m.fixada && <Pin size={12} className="text-primary" />}
@@ -173,10 +173,10 @@ function Duvidas({ turma, pessoas }: { turma: MinhaTurma; pessoas: Map<string, P
       {duvidas.data?.map((d) => (
         <div key={d.id} className="rounded-lg border border-border">
           <div className="flex gap-3 p-3.5">
-            <Avatar id={d.autor_id} pessoa={pessoas.get(d.autor_id)} />
+            <Avatar id={d.autor_id ?? 'ex-aluno'} pessoa={d.autor_id ? pessoas.get(d.autor_id) : undefined} />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <b className="text-[13px] text-foreground">{pessoas.get(d.autor_id)?.nome}</b> {tempoRelativo(d.criado_em)}
+                <b className="text-[13px] text-foreground">{d.autor_id ? pessoas.get(d.autor_id)?.nome : 'Ex-aluno'}</b> {tempoRelativo(d.criado_em)}
                 {d.resolvida && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-0.5 text-[11px] font-semibold text-success">
                     <CheckCircle2 size={11} /> Resolvida

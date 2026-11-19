@@ -247,3 +247,48 @@ def test_outra_unidade_nao_ve_nada_desta(url, db, pessoas):  # noqa: F811
         assert c.execute("select * from turmas").fetchall() == []
         assert c.execute("select * from perfis where id <> %s", (estranho,)).fetchall() == []
         falha(c, "select pedir_entrada(%s, null)", (TURMA_POO,), contem="turma_nao_encontrada")
+
+
+# ------------------------------------------------------------------ LGPD: exportar e excluir a conta
+
+def test_exportar_traz_so_os_meus_dados(url, pessoas):  # noqa: F811
+    with como(url, pessoas["ana"]) as c:
+        c.execute("insert into tarefas (usuario_id, titulo) values (%s, 'Lista 3')", (pessoas["ana"],))
+        c.execute("insert into mensagens (turma_id, canal, autor_id, texto) values (%s, 'geral', %s, 'oi')",
+                  (TURMA_POO, pessoas["ana"]))
+    with como(url, pessoas["bruno"]) as c:
+        c.execute("insert into tarefas (usuario_id, titulo) values (%s, 'Tarefa do Bruno')", (pessoas["bruno"],))
+    with como(url, pessoas["ana"]) as c:
+        d = c.execute("select exportar_meus_dados() d").fetchone()["d"]
+        assert d["perfil"]["email"] == "ana.silva@aluno.cps.sp.gov.br"
+        assert [t["titulo"] for t in d["tarefas"]] == ["Lista 3"]
+        assert [m["texto"] for m in d["mensagens"]] == ["oi"]
+        assert d["matriculas"][0]["disciplina"] == "Programação Orientada a Objetos"
+    with como(url, None) as c:
+        falha(c, "select exportar_meus_dados()", contem="permission denied")
+
+
+def test_excluir_conta_apaga_o_pessoal_e_anonimiza_o_da_turma(url, db, pessoas):  # noqa: F811
+    ana = pessoas["ana"]
+    with como(url, ana) as c:
+        c.execute("insert into materiais (dono_id, tipo, titulo) values (%s, 'anotacao', 'Privado da Ana')", (ana,))
+        c.execute("insert into mensagens (turma_id, canal, autor_id, texto) values (%s, 'geral', %s, 'mensagem da Ana')",
+                  (TURMA_POO, ana))
+        c.execute("insert into duvidas (turma_id, autor_id, texto) values (%s, %s, 'dúvida da Ana')", (TURMA_POO, ana))
+        c.execute("insert into tarefas (usuario_id, titulo) values (%s, 'Lista')", (ana,))
+        falha(c, "select excluir_minha_conta('sim')", contem="confirmacao_invalida")
+        c.execute("select excluir_minha_conta('excluir')")
+    assert db.execute("select count(*) n from perfis where id = %s", (ana,)).fetchone()["n"] == 0
+    assert db.execute("select count(*) n from auth.users where id = %s", (ana,)).fetchone()["n"] == 0
+    assert db.execute("select count(*) n from materiais where titulo = 'Privado da Ana'").fetchone()["n"] == 0
+    assert db.execute("select count(*) n from tarefas where usuario_id = %s", (ana,)).fetchone()["n"] == 0
+    # O que era da turma continua, sem autor.
+    assert db.execute("select autor_id from mensagens where texto = 'mensagem da Ana'").fetchone()["autor_id"] is None
+    assert db.execute("select autor_id from duvidas where texto = 'dúvida da Ana'").fetchone()["autor_id"] is None
+    a = db.execute("select dados from auditoria where acao = 'conta_excluida'").fetchone()["dados"]
+    assert "ana" not in str(a).lower()  # o registro não guarda dado pessoal
+
+
+def test_ultimo_admin_nao_se_exclui(url, pessoas):  # noqa: F811
+    with como(url, pessoas["admin"]) as c:
+        falha(c, "select excluir_minha_conta('EXCLUIR')", contem="ultimo_admin")

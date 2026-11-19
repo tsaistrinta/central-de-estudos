@@ -31,6 +31,8 @@ export function mensagemDeErro(erro: unknown): string {
   const e = erro as Partial<AuthError> | undefined
   if (e?.code && mensagens[e.code]) return mensagens[e.code]
   if (e?.message === 'Failed to fetch') return 'Sem conexão com o servidor. Tente de novo.'
+  if (e?.message?.includes('confirmacao_invalida')) return 'Digite EXCLUIR para confirmar.'
+  if (e?.message?.includes('ultimo_admin')) return 'Você é o único administrador: passe o papel de admin a outra pessoa antes de excluir a conta.'
   if (e?.message?.includes('dominio_nao_permitido') || e?.message === 'Database error saving new user')
     return 'Use seu e-mail institucional da Fatec (@aluno.cps.sp.gov.br).'
   return e?.message ?? 'Algo deu errado. Tente de novo.'
@@ -103,4 +105,18 @@ export async function atualizarPerfil(id: string, valores: Partial<Omit<Perfil, 
   const { data, error } = await cliente().from('perfis').update(valores).eq('id', id).select().single()
   if (error) throw error
   return data as Perfil
+}
+
+/** LGPD: todos os dados da conta num JSON (perfil, agenda, arquivos, tarefas, notas, mensagens, acervo…). */
+export async function exportarMeusDados(): Promise<unknown> {
+  const { data, error } = await cliente().rpc('exportar_meus_dados')
+  if (error) throw error
+  return data
+}
+
+/** LGPD: exclui a conta. O que era só da pessoa some; o que ela publicou na turma fica como "Ex-aluno". */
+export async function excluirMinhaConta(confirmacao: string) {
+  const { error } = await cliente().rpc('excluir_minha_conta', { p_confirmacao: confirmacao })
+  if (error) throw error
+  await cliente().auth.signOut()
 }

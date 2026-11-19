@@ -82,7 +82,7 @@ export default function Acervo({ disciplinaId, disciplinaNome }: { disciplinaId:
                   </button>
                   <p className="text-xs text-muted-foreground">
                     {ROTULO_TIPO_ACERVO[i.tipo]}
-                    {i.periodo_origem && ` · ${i.periodo_origem}`} · {meu ? 'você' : (pessoas.data?.get(i.autor_id)?.nome ?? 'colega')} · {tempoRelativo(i.criado_em)}
+                    {i.periodo_origem && ` · ${i.periodo_origem}`} · {meu ? 'você' : !i.autor_id ? 'Ex-aluno' : (pessoas.data?.get(i.autor_id)?.nome ?? 'colega')} · {tempoRelativo(i.criado_em)}
                     {i.arquivo_tamanho ? ` · ${tamanhoLegivel(i.arquivo_tamanho)}` : ''}
                   </p>
                   {i.descricao && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{i.descricao}</p>}

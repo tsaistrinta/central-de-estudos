@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Navigate, NavLink, useParams } from 'react-router-dom'
+import { Link, Navigate, NavLink, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Calendar, Copy, Download, Mail } from 'lucide-react'
-import { atualizarPerfil, mensagemDeErro } from '@/api/auth'
+import { Calendar, Copy, Download, Mail, Trash2 } from 'lucide-react'
+import { atualizarPerfil, excluirMinhaConta, exportarMeusDados, mensagemDeErro } from '@/api/auth'
+import { modoDemo } from '@/api/base'
 import { linkIcs, minhasPreferencias, salvarPreferencias } from '@/api/agenda'
 import { listarMateriais, listarRevisao, listarTarefas, minhaFrequencia, minhasNotas } from '@/api/espaco'
 import { eventosNoIntervalo } from '@/api/agenda'
@@ -159,42 +160,100 @@ function Agenda() {
   )
 }
 
+function baixarJson(dados: unknown, nome: string) {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' }))
+  const a = document.createElement('a')
+  a.href = url
+  a.download = nome
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 function Privacidade() {
+  const navegar = useNavigate()
   const [gerando, setGerando] = useState(false)
+  const [erro, setErro] = useState('')
+  const [confirmacao, setConfirmacao] = useState('')
+  const [excluindo, setExcluindo] = useState(false)
+
   async function exportar() {
     setGerando(true)
+    setErro('')
     try {
-      const ano = new Date().getFullYear()
-      const dados = {
-        exportado_em: new Date().toISOString(),
-        eventos: await eventosNoIntervalo(new Date(`${ano - 1}-01-01`), new Date(`${ano + 1}-12-31`)),
-        materiais: await listarMateriais({}),
-        tarefas: await listarTarefas(),
-        revisao: await listarRevisao(),
-        notas: await minhasNotas(),
-        frequencia: await minhaFrequencia(),
+      if (modoDemo) {
+        const ano = new Date().getFullYear()
+        baixarJson({
+          exportado_em: new Date().toISOString(),
+          aviso: 'Modo demonstração: dados de exemplo.',
+          eventos: await eventosNoIntervalo(new Date(`${ano - 1}-01-01`), new Date(`${ano + 1}-12-31`)),
+          materiais: await listarMateriais({}),
+          tarefas: await listarTarefas(),
+          revisao: await listarRevisao(),
+          notas: await minhasNotas(),
+          frequencia: await minhaFrequencia(),
+        }, 'central-de-estudos-meus-dados.json')
+      } else {
+        baixarJson(await exportarMeusDados(), 'central-de-estudos-meus-dados.json')
       }
-      const url = URL.createObjectURL(new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' }))
-      const a = document.createElement('a')
-      a.href = url
-      a.download = 'central-de-estudos-meus-dados.json'
-      a.click()
-      URL.revokeObjectURL(url)
+    } catch (e) {
+      setErro(mensagemDeErro(e))
     } finally {
       setGerando(false)
     }
   }
+
+  async function excluir() {
+    setErro('')
+    setExcluindo(true)
+    try {
+      await excluirMinhaConta(confirmacao)
+      navegar('/entrar', { replace: true })
+    } catch (e) {
+      setErro(mensagemDeErro(e))
+      setExcluindo(false)
+    }
+  }
+
   return (
-    <Cartao titulo="Privacidade e dados">
-      <div className="max-w-xl space-y-3 px-4 pb-4 text-[13px] leading-relaxed text-muted-foreground">
-        <p>Seus dados pessoais (agenda pessoal, materiais, tarefas, notas e faltas) só são vistos por você. O que você publica numa turma é visto pelos colegas dela.</p>
-        <p>A Central nunca pede nem guarda a senha do SIGA.</p>
-        <Button variant="outline" onClick={exportar} disabled={gerando}>
-          <Download /> {gerando ? 'Gerando…' : 'Baixar meus dados (JSON)'}
-        </Button>
-        <p>Para excluir a conta e todos os dados, escreva para o administrador da plataforma pelo e-mail do projeto.</p>
-      </div>
-    </Cartao>
+    <div className="space-y-4">
+      <Cartao titulo="Seus dados">
+        <div className="max-w-xl space-y-3 px-4 pb-4 text-[13px] leading-relaxed text-muted-foreground">
+          <p>Seus dados pessoais (agenda pessoal, arquivos, tarefas, notas e faltas) só são vistos por você. O que você publica numa turma é visto pelos colegas dela.</p>
+          <p>A Central nunca pede nem guarda a senha do SIGA. O Archie roda num servidor próprio: nada vai para IA de terceiros.</p>
+          <Button variant="outline" onClick={exportar} disabled={gerando}>
+            <Download /> {gerando ? 'Gerando…' : 'Baixar todos os meus dados (JSON)'}
+          </Button>
+          <p>
+            Leia os <Link to="/termos" className="text-primary hover:underline">Termos de uso</Link> e a{' '}
+            <Link to="/privacidade" className="text-primary hover:underline">Política de privacidade</Link>.
+          </p>
+        </div>
+      </Cartao>
+      <Cartao titulo="Excluir minha conta">
+        <div className="max-w-xl space-y-3 px-4 pb-4 text-[13px] leading-relaxed text-muted-foreground">
+          {erro && <Aviso tipo="erro">{erro}</Aviso>}
+          <p>
+            Apaga para sempre sua agenda pessoal, seus arquivos privados, tarefas, revisão, notas, faltas e votos. O que você
+            publicou para a turma (mensagens, dúvidas, respostas e itens do acervo) continua lá, sem o seu nome, como “Ex-aluno”.
+            Não dá para desfazer.
+          </p>
+          <div className="flex flex-wrap items-end gap-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="confirmar-exclusao">Para confirmar, digite EXCLUIR</Label>
+              <Input id="confirmar-exclusao" value={confirmacao} onChange={(e) => setConfirmacao(e.target.value)} autoComplete="off" className="w-48" />
+            </div>
+            <Button
+              variant="destructive"
+              disabled={modoDemo || excluindo || confirmacao.trim().toUpperCase() !== 'EXCLUIR'}
+              onClick={excluir}
+              title={modoDemo ? 'Indisponível no modo demonstração' : undefined}
+            >
+              <Trash2 /> {excluindo ? 'Excluindo…' : 'Excluir minha conta'}
+            </Button>
+          </div>
+        </div>
+      </Cartao>
+    </div>
   )
 }
 

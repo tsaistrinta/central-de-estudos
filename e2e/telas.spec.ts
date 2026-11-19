@@ -5,7 +5,7 @@ const ROTAS = ['/', '/agenda?visao=dia', '/agenda?visao=semana-util', '/agenda?v
   '/materias', '/materias/d-poo', '/arquivos', '/tarefas', '/revisao', '/notas', '/turma', '/curso', '/unidade',
   '/admin/visao', '/admin/fontes', '/admin/curadoria', '/admin/contas', '/admin/entradas', '/admin/quarentena', '/admin/turmas',
   '/admin/servidor', '/configuracoes/perfil', '/configuracoes/notificacoes', '/configuracoes/agenda', '/configuracoes/privacidade',
-  '/entrar', '/criar-conta', '/recuperar-senha']
+  '/entrar', '/criar-conta', '/recuperar-senha', '/termos', '/privacidade']
 
 for (const rota of ROTAS) {
   test(`abre ${rota}`, async ({ page }) => {
@@ -30,4 +30,16 @@ test('/entrada antiga leva a Meus arquivos', async ({ page }) => {
 test('rota que não existe mostra página de não encontrada', async ({ page }) => {
   await page.goto('/nao-existe')
   await expect(page.getByText(/não encontrada/i)).toBeVisible()
+})
+
+test('privacidade: excluir conta só libera com EXCLUIR e mostra os direitos', async ({ page }) => {
+  await page.goto('/configuracoes/privacidade')
+  await expect(page.getByRole('button', { name: /Baixar todos os meus dados/ })).toBeVisible()
+  const excluir = page.getByRole('button', { name: /Excluir minha conta/ })
+  await expect(excluir).toBeDisabled()
+  await page.getByLabel('Para confirmar, digite EXCLUIR').fill('excluir')
+  await expect(excluir).toBeDisabled() // modo demonstração: nunca exclui
+  await page.goto('/privacidade')
+  await expect(page.getByText('lucas.strinta@aluno.cps.sp.gov.br').first()).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Seus direitos/ })).toBeVisible()
 })

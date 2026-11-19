@@ -123,7 +123,7 @@ export interface AgendaPreferencias {
 
 export interface Material {
   id: string
-  dono_id: string
+  dono_id: string | null  // null: conta excluída (material que era da turma)
   turma_id?: string | null
   disciplina_id?: string | null
   tipo: 'arquivo' | 'link' | 'anotacao'
@@ -194,7 +194,7 @@ export interface Mensagem {
   id: string
   turma_id: string
   canal: string
-  autor_id: string
+  autor_id: string | null  // null: conta excluída ("Ex-aluno")
   texto: string
   fixada: boolean
   criado_em: string
@@ -203,7 +203,7 @@ export interface Mensagem {
 export interface Duvida {
   id: string
   turma_id: string
-  autor_id: string
+  autor_id: string | null  // null: conta excluída ("Ex-aluno")
   texto: string
   resolvida: boolean
   criado_em: string
@@ -375,7 +375,7 @@ export interface ModeracaoAcervo {
 export interface ItemAcervo {
   id: string
   disciplina_id: string
-  autor_id: string
+  autor_id: string | null  // null: conta excluída ("Ex-aluno")
   tipo: TipoAcervo
   titulo: string
   descricao: string | null
