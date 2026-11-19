@@ -1,0 +1,15 @@
+{
+  "name": "Central de Estudos · Fatec Indaiatuba",
+  "short_name": "Central",
+  "description": "Materiais, agenda e avisos da Fatec Indaiatuba em um só lugar, com o assistente Archie.",
+  "lang": "pt-BR",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2f4ad0",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
