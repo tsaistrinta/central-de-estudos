@@ -383,3 +383,20 @@ def test_entrada_por_pedido_codigo_e_acervo_moderado(banco, url, monkeypatch):
     with psycopg.connect(url, autocommit=True, row_factory=dict_row) as c:
         _login(c, outro)  # não cursa a disciplina
         assert c.execute("select count(*) n from acervo_itens").fetchone()["n"] == 0
+
+
+def test_grade_da_matriz_nova_nao_mexe_na_matriz_antiga(banco):
+    g = grade_conferida()
+    g.matriz = "nova"  # o mesmo PDF, como se fosse da matriz nova
+    r = Publicador(banco, cfg(), fonte(banco, "grade"), None).grade(g, banco.cursos(TENANT), "2026/2")
+    assert r.mudancas == 0  # nenhuma turma da matriz antiga (seed) foi alterada
+    soc = q(banco, "select motivo, dados from curadoria where dados->>'nome_no_pdf' = 'SOC TEC'")[0]
+    assert soc["dados"]["disciplina"]["matriz"] == "nova"
+    assert "matriz antiga" in soc["motivo"] and "matriz nova" in soc["motivo"]
+    # Aprovando, a disciplina nova nasce marcada como da matriz nova, separada da antiga.
+    cid = q(banco, "select id from curadoria where dados->>'nome_no_pdf' = 'SOC TEC'")[0]["id"]
+    turma = q(banco, "select aplicar_curadoria(%s) x", cid)[0]["x"]
+    nova = q(banco, "select d.matriz, d.semestre_matriz from turmas t join disciplinas d on d.id = t.disciplina_id where t.id = %s", turma)[0]
+    assert nova == {"matriz": "nova", "semestre_matriz": 4}
+    antiga = q(banco, "select matriz from disciplinas where id = '00000000-0000-0000-0000-0000000000d5'")[0]
+    assert antiga["matriz"] is None  # a da matriz antiga continua igual

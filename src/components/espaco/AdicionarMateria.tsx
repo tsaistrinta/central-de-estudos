@@ -113,7 +113,14 @@ export default function AdicionarMateria({ onFechar }: { onFechar: () => void })
                     <li key={t.id} className="flex items-center gap-2.5 border-b border-muted px-3 py-2 text-[13px] last:border-0">
                       <PontoMateria cor={`var(--subject-${t.disciplina.cor})`} />
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate font-medium">{t.disciplina.nome}</span>
+                        <span className="flex items-center gap-1.5 truncate font-medium">
+                          {t.disciplina.nome}
+                          {t.disciplina.matriz === 'nova' && (
+                            <span className="rounded-full bg-accent px-1.5 py-px text-[10.5px] font-semibold text-accent-foreground" title="Disciplina da matriz curricular nova do curso">
+                              Matriz nova
+                            </span>
+                          )}
+                        </span>
                         <span className="text-xs text-muted-foreground">
                           {t.professor_nome ?? 'Professor a confirmar'} · {TURNO[t.turno]}
                         </span>

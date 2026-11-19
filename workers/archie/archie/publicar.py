@@ -288,7 +288,8 @@ class Publicador:
                      for a in sorted(aulas, key=lambda a: (a.dia_semana, a.inicio))]
             conf = do_grupo(g.conferencia, sem, nome_pdf)
             # Só vale a disciplina do MESMO semestre. Nome igual em outro semestre nunca é aplicado sozinho.
-            disc = next((d for d in disciplinas if d["semestre_matriz"] == sem
+            # Mesmo semestre e mesma matriz (a Fatec roda a matriz antiga e a nova ao mesmo tempo).
+            disc = next((d for d in disciplinas if d["semestre_matriz"] == sem and d.get("matriz") == g.matriz
                          and mesmo_nome(nome_pdf, d["nome"], d["sigla"])), None)
             outra = None if disc else next((d for d in disciplinas if mesmo_nome(nome_pdf, d["nome"], d["sigla"])), None)
             turma = next((t for t in turmas if disc and t["disciplina_id"] == disc["id"]), None)
@@ -334,7 +335,7 @@ class Publicador:
             # Turma nova: a disciplina pode já existir (só falta a turma do período) ou ser nova de verdade.
             nome_bonito = bonito(nome_pdf)
             disciplina = {"id": str(disc["id"])} if disc else {
-                "curso_id": str(curso["id"]), "nome": nome_bonito, "semestre_matriz": sem,
+                "curso_id": str(curso["id"]), "nome": nome_bonito, "semestre_matriz": sem, "matriz": g.matriz,
                 "sigla": nome_pdf.rstrip(".") if ("." in nome_pdf or len(nome_pdf) <= 6) else sigla_de(nome_pdf).upper()[:6]}
             dados = {"disciplina": disciplina,
                      "turma": {"periodo_letivo": g.periodo, "turno": g.turno, "professor_nome": professor},
@@ -343,14 +344,18 @@ class Publicador:
                                                g.periodo, g.turno)}
             if outra:
                 dados["ja_existe_em"] = {"id": str(outra["id"]), "nome": outra["nome"],
-                                         "semestre": outra["semestre_matriz"]}
+                                         "semestre": outra["semestre_matriz"], "matriz": outra.get("matriz")}
             resumo = (f"{'Turma nova' if disc else 'Disciplina nova'}: {disc['nome'] if disc else nome_bonito} "
                       f"({sem}º sem.) · " + "; ".join(_aula_txt(a) for a in novas))
             auto = (outra is None and self._pode_sozinho(g.confianca, conf)
                     and (disc is not None or self.cfg.auto_estrutura))
             if self.banco.assinatura_existe(dados["assinatura"]):
                 continue
-            if outra:
+            if outra and outra["semestre_matriz"] == sem:
+                motivo = (f"já existe \"{outra['nome']}\" no {sem}º semestre da matriz "
+                          f"{outra.get('matriz') or 'antiga'}; este PDF é da matriz {g.matriz or 'antiga'}. "
+                          f"Aprovar cria a turma separada desta matriz")
+            elif outra:
                 motivo = (f"já existe \"{outra['nome']}\" no {outra['semestre_matriz']}º semestre, mas o PDF mostra "
                           f"no {sem}º; confira qual está certo antes de aprovar")
             elif not self._conferido(conf):

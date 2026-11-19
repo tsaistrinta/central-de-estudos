@@ -51,6 +51,7 @@ class Grade:
     metodo: str = "posicao"
     confianca: float = 0.0
     conferencia: dict | None = None  # comparação com a segunda leitura (archie.conferencia)
+    matriz: str | None = None  # "nova" quando o PDF é da matriz nova do curso ("(NOVO)" no cabeçalho)
 
     def como_dict(self) -> dict:
         return asdict(self)
@@ -101,7 +102,9 @@ def ler_itens(itens: list[Item]) -> Grade:
                 if palavra in normalizar(it.texto):
                     g.turno = turno
             if k + 1 < len(por_y):
-                g.curso = re.sub(r"\(?\bnovo\b\)?", "", por_y[k + 1].texto, flags=re.I).strip()
+                linha = por_y[k + 1].texto
+                g.matriz = "nova" if re.search(r"\bnovo\b", linha, flags=re.I) else None
+                g.curso = re.sub(r"\(?\bnovo\b\)?", "", linha, flags=re.I).strip()
             break
 
     sems = sorted([(int(RE_SEM.match(i.texto).group(1)), i) for i in itens if RE_SEM.match(i.texto)], key=lambda s: s[1].x)
@@ -272,7 +275,10 @@ o professor e a sala. Não invente: se uma célula estiver ilegível, deixe de f
 
 def ler_com_ia(dados: bytes, ia, pagina: int = 0) -> Grade:
     resp = ia.json(PROMPT_IA, ESQUEMA_IA, imagens=[pdf.png_da_pagina(dados, pagina, dpi=170)], visao=True)
-    g = Grade(curso=resp.get("curso"), periodo=resp.get("periodo"), turno=resp.get("turno"), metodo="ia")
+    curso_ia = str(resp.get("curso") or "")
+    g = Grade(curso=re.sub(r"\(?\bnovo\b\)?", "", curso_ia, flags=re.I).strip() or None, periodo=resp.get("periodo"),
+              turno=resp.get("turno"), metodo="ia",
+              matriz="nova" if re.search(r"\bnovo\b", curso_ia, flags=re.I) else None)
     for a in resp.get("aulas", []):
         try:
             if not re.fullmatch(r"\d{2}:\d{2}", a["inicio"]) or not re.fullmatch(r"\d{2}:\d{2}", a["fim"]):

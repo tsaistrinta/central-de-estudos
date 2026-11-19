@@ -56,6 +56,8 @@ export interface Disciplina {
   nome: string
   sigla?: string | null
   semestre_matriz?: number | null
+  /** null = matriz única/antiga; "nova" = matriz nova do curso (as duas rodam ao mesmo tempo). */
+  matriz?: 'nova' | 'antiga' | null
   cor: CorMateria
 }
 
